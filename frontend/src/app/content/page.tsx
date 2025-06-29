@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { contentApi, tagApi } from '../../lib/contentApi';
 import type { Post, Tag, ContentFilters } from '../../types/content';
-import MainNav from '../../components/MainNav';
 
 interface ContentPageProps {}
 
@@ -67,7 +65,6 @@ export default function ContentPage({}: ContentPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MainNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 页面标题 */}
         <div className="mb-8">
@@ -202,14 +199,13 @@ function PostCard({ post }: { post: Post }) {
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {post.tags.slice(0, 3).map((tag) => (
-              <Link
+              <span
                 key={tag._id}
-                href={`/tags/${tag.slug}`}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity"
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                 style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
               >
                 {tag.name}
-              </Link>
+              </span>
             ))}
           </div>
         )}
@@ -254,47 +250,40 @@ function TagGrid({ tags }: { tags: Tag[] }) {
 // 标签卡片组件
 function TagCard({ tag }: { tag: Tag }) {
   return (
-    <Link href={`/tags/${tag.slug}`}>
-      <div 
-        className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-        style={{ borderLeftColor: tag.color, borderLeftWidth: '4px' }}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{tag.name}</h3>
-            {tag.description && (
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{tag.description}</p>
-            )}
-            <div className="flex items-center text-sm text-gray-500 space-x-4">
-              <span>{tag.postCount} 文章</span>
-              <span>{tag.followerCount} 关注</span>
-            </div>
-          </div>
-          {tag.isHot && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-              热门
-            </span>
+    <div 
+      className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+      style={{ borderLeftColor: tag.color, borderLeftWidth: '4px' }}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{tag.name}</h3>
+          {tag.description && (
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{tag.description}</p>
           )}
+          <div className="flex items-center text-sm text-gray-500 space-x-4">
+            <span>{tag.postCount} 文章</span>
+            <span>{tag.followerCount} 关注</span>
+          </div>
         </div>
-        
-        <div className="mt-4">
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // 处理关注逻辑
-            }}
-            className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              tag.isFollowed
-                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-            }`}
-          >
-            {tag.isFollowed ? '已关注' : '关注'}
-          </button>
-        </div>
+        {tag.isHot && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            热门
+          </span>
+        )}
       </div>
-    </Link>
+      
+      <div className="mt-4">
+        <button 
+          className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            tag.isFollowed
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+          }`}
+        >
+          {tag.isFollowed ? '已关注' : '关注'}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -302,57 +291,17 @@ function TagCard({ tag }: { tag: Tag }) {
 function Sidebar() {
   return (
     <div className="space-y-6">
-      {/* 快捷导航 */}
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">快捷导航</h3>
-        <div className="space-y-2">
-          <Link
-            href="/bookmarks"
-            className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-            我的收藏
-          </Link>
-          <Link
-            href="/tags"
-            className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            标签中心
-          </Link>
-          <Link
-            href="/search"
-            className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            搜索内容
-          </Link>
-        </div>
-      </div>
-
       {/* 热门标签 */}
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">热门标签</h3>
-          <Link href="/tags" className="text-sm text-indigo-600 hover:text-indigo-500">
-            查看全部
-          </Link>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">热门标签</h3>
         <div className="space-y-2">
           {['技术', '创业', '设计', '产品', '投资'].map((tagName) => (
-            <Link
+            <button
               key={tagName}
-              href={`/search?q=${tagName}`}
               className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
             >
               #{tagName}
-            </Link>
+            </button>
           ))}
         </div>
       </div>

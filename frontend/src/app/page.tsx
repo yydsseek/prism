@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Users, BookOpen, DollarSign, Star, Compass, Tag, Search, Bookmark } from 'lucide-react'
-import MainNav from '../components/MainNav'
+import { ArrowRight, Users, BookOpen, DollarSign, Star } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Prism - 内容创作者平台',
@@ -11,8 +10,43 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* 主导航栏 */}
-      <MainNav />
+      {/* 导航栏 */}
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-gradient">
+                Prism
+              </Link>
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/explore" className="text-gray-600 hover:text-gray-900">
+                探索
+              </Link>
+              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
+                定价
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900">
+                关于
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                登录
+              </Link>
+              <Link
+                href="/register"
+                className="btn-primary"
+              >
+                开始创作
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       {/* 英雄区域 */}
       <section className="relative overflow-hidden py-20 sm:py-32">
@@ -40,10 +74,10 @@ export default function HomePage() {
                 </div>
                 <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                   <Link
-                    href="/content"
+                    href="/explore"
                     className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
                   >
-                    发现内容
+                    探索内容
                   </Link>
                 </div>
               </div>
@@ -78,65 +112,41 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
               <div className="flex items-center justify-center h-16 w-16 rounded-md bg-primary-500 text-white mx-auto">
-                <Compass className="h-8 w-8" />
+                <BookOpen className="h-8 w-8" />
               </div>
               <h3 className="mt-6 text-lg font-medium text-gray-900">
-                智能推荐
+                强大的编辑器
               </h3>
               <p className="mt-2 text-base text-gray-500">
-                基于个人偏好的智能内容推荐，发现感兴趣的优质内容
+                支持 Markdown 格式，让您专注于内容创作，而不是格式调整
               </p>
-              <Link href="/content" className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium">
-                立即发现 →
-              </Link>
             </div>
 
             <div className="text-center">
               <div className="flex items-center justify-center h-16 w-16 rounded-md bg-primary-500 text-white mx-auto">
-                <Tag className="h-8 w-8" />
+                <Users className="h-8 w-8" />
               </div>
               <h3 className="mt-6 text-lg font-medium text-gray-900">
-                标签系统
+                订阅管理
               </h3>
               <p className="mt-2 text-base text-gray-500">
-                关注感兴趣的话题标签，获取相关内容的实时推送
+                轻松管理付费订阅者，建立稳定的收入来源
               </p>
-              <Link href="/tags" className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium">
-                浏览标签 →
-              </Link>
             </div>
 
             <div className="text-center">
               <div className="flex items-center justify-center h-16 w-16 rounded-md bg-primary-500 text-white mx-auto">
-                <Bookmark className="h-8 w-8" />
+                <DollarSign className="h-8 w-8" />
               </div>
               <h3 className="mt-6 text-lg font-medium text-gray-900">
-                收藏管理
+                收益分析
               </h3>
               <p className="mt-2 text-base text-gray-500">
-                收藏喜欢的文章，分类管理，随时回顾精彩内容
+                详细的收益统计和分析，帮助您优化内容策略
               </p>
-              <Link href="/bookmarks" className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium">
-                管理收藏 →
-              </Link>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center h-16 w-16 rounded-md bg-primary-500 text-white mx-auto">
-                <Search className="h-8 w-8" />
-              </div>
-              <h3 className="mt-6 text-lg font-medium text-gray-900">
-                全文搜索
-              </h3>
-              <p className="mt-2 text-base text-gray-500">
-                强大的搜索功能，快速找到想要的文章和标签
-              </p>
-              <Link href="/search" className="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium">
-                开始搜索 →
-              </Link>
             </div>
           </div>
         </div>
