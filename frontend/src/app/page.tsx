@@ -19,17 +19,20 @@ export default function HomePage() {
                 Prism
               </Link>
             </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/explore" className="text-gray-600 hover:text-gray-900">
-                探索
-              </Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
-                定价
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-gray-900">
-                关于
-              </Link>
-            </div>
+                         <div className="hidden md:flex items-center space-x-8">
+               <Link href="/content" className="text-gray-600 hover:text-gray-900">
+                 探索
+               </Link>
+               <Link href="/content?tab=subscribed" className="text-gray-600 hover:text-gray-900">
+                 订阅
+               </Link>
+               <Link href="/notifications" className="text-gray-600 hover:text-gray-900">
+                 消息
+               </Link>
+               <Link href="/about" className="text-gray-600 hover:text-gray-900">
+                 关于
+               </Link>
+             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/login"
@@ -74,7 +77,7 @@ export default function HomePage() {
                 </div>
                 <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                   <Link
-                    href="/explore"
+                    href="/content"
                     className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
                   >
                     探索内容

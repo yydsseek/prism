@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { tagApi } from '../../../lib/contentApi';
 import type { Tag, Post, ContentFilters } from '../../../types/content';
+import TopNavBar from '../../../components/TopNavBar';
 
 export default function TagDetailPage() {
   const params = useParams();
@@ -12,7 +13,8 @@ export default function TagDetailPage() {
   const [tag, setTag] = useState<Tag | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<'publishedAt' | 'views' | 'likeCount'>('publishedAt');
   const [filters, setFilters] = useState<ContentFilters>({
     page: 1,
     limit: 20,
@@ -26,7 +28,6 @@ export default function TagDetailPage() {
       const response = await tagApi.getTagDetails(slug, filters);
       setTag(response.data.tag);
       setPosts(response.data.posts || []);
-      setFollowing(response.data.tag.isFollowed || false);
     } catch (error) {
       console.error('加载标签详情失败:', error);
     } finally {
@@ -34,23 +35,42 @@ export default function TagDetailPage() {
     }
   };
 
+  // 加载相关文章
+  const loadPosts = async () => {
+    if (!tag) return;
+    
+    setPostsLoading(true);
+    try {
+      const response = await tagApi.getTagDetails(slug, { ...filters, sortBy });
+      setPosts(response.data.posts || []);
+    } catch (error) {
+      console.error('加载文章失败:', error);
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (slug) {
       loadTagDetails();
     }
-  }, [slug, filters]);
+  }, [slug]);
+
+  useEffect(() => {
+    if (tag) {
+      loadPosts();
+    }
+  }, [sortBy, filters, tag]);
 
   // 关注/取消关注标签
-  const handleFollowToggle = async () => {
+  const handleFollowTag = async () => {
     if (!tag) return;
     
     try {
       const response = await tagApi.followTag(tag._id);
-      setFollowing(response.data.isFollowed);
-      
-      // 更新标签的关注者数量
       setTag(prev => prev ? {
         ...prev,
+        isFollowed: response.data.isFollowed,
         followerCount: response.data.isFollowed 
           ? prev.followerCount + 1 
           : prev.followerCount - 1
@@ -60,25 +80,51 @@ export default function TagDetailPage() {
     }
   };
 
-  // 切换排序
-  const handleSortChange = (sortBy: 'publishedAt' | 'views' | 'likeCount') => {
-    setFilters(prev => ({ ...prev, sortBy, page: 1 }));
+  // 排序处理
+  const handleSortChange = (newSortBy: typeof sortBy) => {
+    setSortBy(newSortBy);
+    setFilters(prev => ({ ...prev, sortBy: newSortBy, page: 1 }));
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <TopNavBar />
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
       </div>
     );
   }
 
   if (!tag) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">标签不存在</h2>
-          <p className="text-gray-600">您访问的标签不存在或已被删除</p>
+      <div className="min-h-screen bg-gray-50">
+        <TopNavBar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-400 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">标签不存在</h3>
+            <p className="text-gray-500 mb-4">该标签可能已被删除或不存在</p>
+            <button
+              onClick={() => window.location.href = '/tags'}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              浏览所有标签
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -86,26 +132,32 @@ export default function TagDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <TopNavBar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 标签头部 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+        {/* 标签头部信息 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center mb-4">
                 <div 
-                  className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-4"
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl mr-6"
                   style={{ backgroundColor: tag.color }}
                 >
                   {tag.icon || tag.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{tag.name}</h1>
-                  <div className="flex items-center mt-2 space-x-4 text-sm text-gray-500">
-                    <span>{tag.postCount} 篇文章</span>
-                    <span>{tag.followerCount} 关注者</span>
-                    {tag.isHot && (
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{tag.name}</h1>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <span>{tag.postCount} 文章</span>
+                    <span>{tag.followerCount} 关注</span>
+                    {tag.isPopular && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        🔥 热门
+                        热门标签
+                      </span>
+                    )}
+                    {tag.isRecommended && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        推荐标签
                       </span>
                     )}
                   </div>
@@ -118,28 +170,27 @@ export default function TagDetailPage() {
                 </p>
               )}
             </div>
-
-            <div className="flex-shrink-0 ml-6">
+            
+            <div className="ml-6">
               <button
-                onClick={handleFollowToggle}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  following
+                onClick={handleFollowTag}
+                className={`px-6 py-3 rounded-md font-medium transition-colors ${
+                  tag.isFollowed
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     : 'bg-indigo-600 text-white hover:bg-indigo-700'
                 }`}
               >
-                {following ? '已关注' : '关注标签'}
+                {tag.isFollowed ? '已关注' : '关注标签'}
               </button>
             </div>
           </div>
         </div>
 
-        {/* 内容区域 */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* 主内容区 */}
           <div className="lg:col-span-3">
             {/* 排序工具栏 */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-medium text-gray-700">排序方式:</span>
@@ -151,11 +202,11 @@ export default function TagDetailPage() {
                     ].map((sort) => (
                       <button
                         key={sort.key}
-                        onClick={() => handleSortChange(sort.key as any)}
+                        onClick={() => handleSortChange(sort.key as typeof sortBy)}
                         className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                          filters.sortBy === sort.key
+                          sortBy === sort.key
                             ? 'bg-indigo-100 text-indigo-700'
-                            : 'text-gray-500 hover:text-gray-700'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         {sort.label}
@@ -163,7 +214,6 @@ export default function TagDetailPage() {
                     ))}
                   </div>
                 </div>
-
                 <div className="text-sm text-gray-500">
                   共 {posts.length} 篇文章
                 </div>
@@ -171,15 +221,29 @@ export default function TagDetailPage() {
             </div>
 
             {/* 文章列表 */}
-            {posts.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <div className="text-gray-400 mb-4">
-                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
+            {postsLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+                <svg
+                  className="w-16 h-16 mx-auto text-gray-400 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">暂无相关文章</h3>
-                <p className="text-gray-500">这个标签下还没有发布的文章</p>
+                <p className="text-gray-500">
+                  该标签下还没有发布文章
+                </p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -192,7 +256,7 @@ export default function TagDetailPage() {
 
           {/* 侧边栏 */}
           <div className="lg:col-span-1">
-            <TagSidebar currentTag={tag} />
+            <TagSidebar tag={tag} />
           </div>
         </div>
       </div>
@@ -203,7 +267,7 @@ export default function TagDetailPage() {
 // 文章卡片组件
 function PostCard({ post }: { post: Post }) {
   return (
-    <article className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+    <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {post.featuredImage && (
         <div className="aspect-w-16 aspect-h-9">
           <img
@@ -221,6 +285,9 @@ function PostCard({ post }: { post: Post }) {
             src={post.author.avatar || '/default-avatar.png'}
             alt={post.author.displayName}
             className="w-10 h-10 rounded-full mr-3"
+            onError={(e) => {
+              e.currentTarget.src = '/default-avatar.png';
+            }}
           />
           <div>
             <p className="text-sm font-medium text-gray-900">{post.author.displayName}</p>
@@ -236,21 +303,6 @@ function PostCard({ post }: { post: Post }) {
         </h2>
         <p className="text-gray-600 mb-4 line-clamp-3">{post.excerpt}</p>
 
-        {/* 其他标签 */}
-        {post.tags && post.tags.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag._id}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
-        )}
-
         {/* 文章统计 */}
         <div className="flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center space-x-4">
@@ -260,12 +312,12 @@ function PostCard({ post }: { post: Post }) {
             <span>{post.readingTime} 分钟阅读</span>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="hover:text-indigo-600">
+            <button className="hover:text-indigo-600 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
-            <button className="hover:text-indigo-600">
+            <button className="hover:text-indigo-600 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
@@ -278,55 +330,48 @@ function PostCard({ post }: { post: Post }) {
 }
 
 // 标签侧边栏组件
-function TagSidebar({ currentTag }: { currentTag: Tag }) {
-  const [relatedTags, setRelatedTags] = useState<Tag[]>([]);
-
-  useEffect(() => {
-    // 这里可以加载相关标签
-    // 暂时使用模拟数据
-    setRelatedTags([]);
-  }, [currentTag]);
-
+function TagSidebar({ tag }: { tag: Tag }) {
   return (
     <div className="space-y-6">
       {/* 标签统计 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">标签统计</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">文章数量</span>
-            <span className="text-sm font-medium text-gray-900">{currentTag.postCount}</span>
+          <div className="flex justify-between">
+            <span className="text-gray-600">文章数量</span>
+            <span className="font-medium text-gray-900">{tag.postCount}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">关注者</span>
-            <span className="text-sm font-medium text-gray-900">{currentTag.followerCount}</span>
+          <div className="flex justify-between">
+            <span className="text-gray-600">关注人数</span>
+            <span className="font-medium text-gray-900">{tag.followerCount}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">创建时间</span>
-            <span className="text-sm font-medium text-gray-900">
-              {new Date(currentTag.createdAt).toLocaleDateString('zh-CN')}
+          <div className="flex justify-between">
+            <span className="text-gray-600">创建时间</span>
+            <span className="font-medium text-gray-900">
+              {new Date(tag.createdAt).toLocaleDateString('zh-CN')}
             </span>
           </div>
         </div>
       </div>
 
       {/* 相关标签 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">相关标签</h3>
         <div className="space-y-2">
-          {['技术', '创业', '设计', '产品'].map((tagName) => (
+          {['技术', '前端', '开发', 'JavaScript', 'React'].map((relatedTag) => (
             <button
-              key={tagName}
-              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+              key={relatedTag}
+              onClick={() => window.location.href = `/search?q=${relatedTag}`}
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
             >
-              #{tagName}
+              #{relatedTag}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 热门创作者 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {/* 活跃创作者 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">活跃创作者</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -334,15 +379,18 @@ function TagSidebar({ currentTag }: { currentTag: Tag }) {
               <img
                 src={`/creator-${i}.jpg`}
                 alt="创作者"
-                className="w-10 h-10 rounded-full mr-3"
+                className="w-8 h-8 rounded-full mr-3"
                 onError={(e) => {
                   e.currentTarget.src = '/default-avatar.png';
                 }}
               />
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">创作者 {i}</p>
-                <p className="text-xs text-gray-500">5 篇文章</p>
+                <p className="text-xs text-gray-500">{Math.floor(Math.random() * 50) + 10} 篇文章</p>
               </div>
+              <button className="text-indigo-600 text-xs font-medium hover:text-indigo-500 transition-colors">
+                关注
+              </button>
             </div>
           ))}
         </div>
