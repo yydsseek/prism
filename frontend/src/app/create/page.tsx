@@ -37,7 +37,6 @@ interface EditorState {
   title: string;
   subtitle: string;
   content: string;
-  tags: string[];
   coverImage: string;
   status: 'draft' | 'published';
   isPaid: boolean;
@@ -65,7 +64,6 @@ export default function CreatePage() {
     title: '',
     subtitle: '',
     content: '',
-    tags: [],
     coverImage: '',
     status: 'draft',
     isPaid: false,
@@ -77,7 +75,6 @@ export default function CreatePage() {
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [currentTag, setCurrentTag] = useState('');
   const [showToolbar, setShowToolbar] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
@@ -319,25 +316,6 @@ export default function CreatePage() {
         handleFileUpload(file, 'file');
       }
     });
-  };
-
-  // 添加标签
-  const addTag = () => {
-    if (currentTag.trim() && !editorState.tags.includes(currentTag.trim())) {
-      setEditorState(prev => ({
-        ...prev,
-        tags: [...prev.tags, currentTag.trim()]
-      }));
-      setCurrentTag('');
-    }
-  };
-
-  // 移除标签
-  const removeTag = (tagToRemove: string) => {
-    setEditorState(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
   };
 
   // 发布文章
@@ -697,44 +675,6 @@ export default function CreatePage() {
                   className="w-full min-h-96 text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none mt-4 px-4 py-4 rounded-xl transition-all duration-300 hover:bg-gradient-to-br hover:from-gray-50/40 hover:via-blue-50/20 hover:to-gray-50/40 focus:bg-gradient-to-br focus:from-blue-50/30 focus:via-white/95 focus:to-purple-50/25 focus:shadow-xl focus:shadow-blue-500/5 focus:ring-1 focus:ring-blue-500/15 backdrop-blur-sm content-area-enhanced"
                   style={{ fontFamily: 'ui-serif, Georgia, serif', lineHeight: '1.75' }}
                 />
-                
-                {/* 标签输入 */}
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="text-sm font-medium text-gray-700">标签:</span>
-                    {editorState.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-700"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="ml-2 text-indigo-500 hover:text-indigo-700"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      placeholder="添加标签..."
-                      value={currentTag}
-                      onChange={(e) => setCurrentTag(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                      className="flex-1 px-3 py-2 border border-gray-200/60 rounded-xl transition-all duration-300 hover:border-gray-300/80 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/30 focus:outline-none focus:border-blue-400/60 focus:bg-gradient-to-r focus:from-blue-50/40 focus:to-purple-50/30 focus:ring-1 focus:ring-blue-500/20 focus:shadow-md focus:shadow-blue-500/10 backdrop-blur-sm"
-                    />
-                    <button
-                      onClick={addTag}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                    >
-                      添加
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           )}
