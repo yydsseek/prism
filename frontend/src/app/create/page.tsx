@@ -261,22 +261,63 @@ export default function CreatePage() {
         cursorOffset = selectedText ? newText.length : 3;
         break;
       case 'quote':
-        // 处理多行引用
-        if (selectedText.includes('\n')) {
-          newText = selectedText.split('\n').map(line => `> ${line}`).join('\n');
-        } else {
-          newText = selectedText ? `> ${selectedText}` : '> 引用文本';
+        // 引用必须在新行开始和结束
+        let quotePrefix = '';
+        let quoteSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          quotePrefix = '\n';
         }
-        cursorOffset = newText.length;
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          quoteSuffix = '\n';
+        }
+        
+        if (selectedText.includes('\n')) {
+          newText = quotePrefix + selectedText.split('\n').map(line => `> ${line}`).join('\n') + quoteSuffix;
+        } else {
+          newText = quotePrefix + (selectedText ? `> ${selectedText}` : '> 引用文本') + quoteSuffix;
+        }
+        cursorOffset = newText.length - quoteSuffix.length;
         break;
       case 'codeblock':
-        newText = selectedText ? 
+        // 代码块必须前后换行
+        let codePrefix = '';
+        let codeSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          codePrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          codeSuffix = '\n';
+        }
+        
+        newText = codePrefix + (selectedText ? 
           `\`\`\`\n${selectedText}\n\`\`\`` : 
-          '```javascript\n// 代码块\nconsole.log("Hello World");\n```';
-        cursorOffset = selectedText ? newText.length : 14; // 光标放在语言标识后
+          '```javascript\n// 代码块\nconsole.log("Hello World");\n```') + codeSuffix;
+        cursorOffset = selectedText ? newText.length - codeSuffix.length : codePrefix.length + 14;
         break;
       case 'divider':
-        newText = '\n---\n';
+        // 分割线必须前后换行
+        let dividerPrefix = '';
+        let dividerSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          dividerPrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          dividerSuffix = '\n';
+        }
+        
+        newText = dividerPrefix + '---' + dividerSuffix;
         cursorOffset = newText.length;
         break;
       case 'link':
@@ -286,60 +327,197 @@ export default function CreatePage() {
         cursorOffset = selectedText ? newText.length - 1 : 5;
         break;
       case 'paywall':
-        newText = '\n[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]\n';
-        cursorOffset = 17; // 光标放在付费内容开始后
+        // 付费墙必须前后换行
+        let paywallPrefix = '';
+        let paywallSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          paywallPrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          paywallSuffix = '\n';
+        }
+        
+        newText = paywallPrefix + '[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]' + paywallSuffix;
+        cursorOffset = paywallPrefix.length + 17;
         break;
       case 'poll':
-        newText = '\n[投票]\n选项1\n选项2\n选项3\n[/投票]\n';
-        cursorOffset = 7; // 光标放在第一个选项
+        // 投票必须前后换行
+        let pollPrefix = '';
+        let pollSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          pollPrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          pollSuffix = '\n';
+        }
+        
+        newText = pollPrefix + '[投票]\n选项1\n选项2\n选项3\n[/投票]' + pollSuffix;
+        cursorOffset = pollPrefix.length + 7;
         break;
       case 'chart':
-        newText = '\n[金融图表: AAPL]\n';
-        cursorOffset = newText.length - 2; // 光标放在股票代码位置
+        // 图表必须前后换行
+        let chartPrefix = '';
+        let chartSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          chartPrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          chartSuffix = '\n';
+        }
+        
+        newText = chartPrefix + '[金融图表: AAPL]' + chartSuffix;
+        cursorOffset = newText.length - 2 - chartSuffix.length;
         break;
       case 'h1':
-        newText = selectedText ? `# ${selectedText}` : '# 一级标题';
-        cursorOffset = selectedText ? newText.length : 3;
+        // 标题必须在新行开始和结束
+        let h1Prefix = '';
+        let h1Suffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          h1Prefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          h1Suffix = '\n';
+        }
+        
+        newText = h1Prefix + (selectedText ? `# ${selectedText}` : '# 一级标题') + h1Suffix;
+        cursorOffset = selectedText ? newText.length - h1Suffix.length : h1Prefix.length + 6;
         break;
       case 'h2':
-        newText = selectedText ? `## ${selectedText}` : '## 二级标题';
-        cursorOffset = selectedText ? newText.length : 4;
+        // 标题必须在新行开始和结束
+        let h2Prefix = '';
+        let h2Suffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          h2Prefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          h2Suffix = '\n';
+        }
+        
+        newText = h2Prefix + (selectedText ? `## ${selectedText}` : '## 二级标题') + h2Suffix;
+        cursorOffset = selectedText ? newText.length - h2Suffix.length : h2Prefix.length + 7;
         break;
       case 'h3':
-        newText = selectedText ? `### ${selectedText}` : '### 三级标题';
-        cursorOffset = selectedText ? newText.length : 5;
+        // 标题必须在新行开始和结束
+        let h3Prefix = '';
+        let h3Suffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          h3Prefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          h3Suffix = '\n';
+        }
+        
+        newText = h3Prefix + (selectedText ? `### ${selectedText}` : '### 三级标题') + h3Suffix;
+        cursorOffset = selectedText ? newText.length - h3Suffix.length : h3Prefix.length + 7;
         break;
       case 'ul':
-        if (selectedText.includes('\n')) {
-          // 多行转换为列表
-          newText = selectedText.split('\n').map(line => line.trim() ? `- ${line.trim()}` : '').join('\n');
-        } else {
-          newText = selectedText ? `- ${selectedText}` : '- 列表项';
+        // 列表必须在新行开始和结束
+        let ulPrefix = '';
+        let ulSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          ulPrefix = '\n';
         }
-        cursorOffset = newText.length;
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          ulSuffix = '\n';
+        }
+        
+        if (selectedText.includes('\n')) {
+          newText = ulPrefix + selectedText.split('\n').map(line => line.trim() ? `- ${line.trim()}` : '').join('\n') + ulSuffix;
+        } else {
+          newText = ulPrefix + (selectedText ? `- ${selectedText}` : '- 列表项') + ulSuffix;
+        }
+        cursorOffset = newText.length - ulSuffix.length;
         break;
       case 'ol':
-        if (selectedText.includes('\n')) {
-          // 多行转换为有序列表
-          const lines = selectedText.split('\n').filter(line => line.trim());
-          newText = lines.map((line, index) => `${index + 1}. ${line.trim()}`).join('\n');
-        } else {
-          newText = selectedText ? `1. ${selectedText}` : '1. 列表项';
+        // 有序列表必须在新行开始和结束
+        let olPrefix = '';
+        let olSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          olPrefix = '\n';
         }
-        cursorOffset = newText.length;
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          olSuffix = '\n';
+        }
+        
+        if (selectedText.includes('\n')) {
+          const lines = selectedText.split('\n').filter(line => line.trim());
+          newText = olPrefix + lines.map((line, index) => `${index + 1}. ${line.trim()}`).join('\n') + olSuffix;
+        } else {
+          newText = olPrefix + (selectedText ? `1. ${selectedText}` : '1. 列表项') + olSuffix;
+        }
+        cursorOffset = newText.length - olSuffix.length;
         break;
       case 'table':
-        newText = '\n| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |\n';
-        cursorOffset = 7; // 光标放在第一列标题位置
+        // 表格必须前后换行
+        let tablePrefix = '';
+        let tableSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          tablePrefix = '\n';
+        }
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          tableSuffix = '\n';
+        }
+        
+        newText = tablePrefix + '| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |' + tableSuffix;
+        cursorOffset = tablePrefix.length + 7;
         break;
       case 'checkbox':
-        if (selectedText.includes('\n')) {
-          // 多行转换为任务列表
-          newText = selectedText.split('\n').map(line => line.trim() ? `- [ ] ${line.trim()}` : '').join('\n');
-        } else {
-          newText = selectedText ? `- [ ] ${selectedText}` : '- [ ] 待办事项';
+        // 任务列表必须在新行开始和结束
+        let checkboxPrefix = '';
+        let checkboxSuffix = '';
+        
+        // 如果前面有内容且不是换行符，添加换行
+        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
+          checkboxPrefix = '\n';
         }
-        cursorOffset = newText.length;
+        
+        // 如果后面有内容且不是换行符，添加换行
+        if (afterText.length > 0 && !afterText.startsWith('\n')) {
+          checkboxSuffix = '\n';
+        }
+        
+        if (selectedText.includes('\n')) {
+          newText = checkboxPrefix + selectedText.split('\n').map(line => line.trim() ? `- [ ] ${line.trim()}` : '').join('\n') + checkboxSuffix;
+        } else {
+          newText = checkboxPrefix + (selectedText ? `- [ ] ${selectedText}` : '- [ ] 待办事项') + checkboxSuffix;
+        }
+        cursorOffset = newText.length - checkboxSuffix.length;
         break;
       case 'strikethrough':
         newText = selectedText ? `~~${selectedText}~~` : '~~删除线文本~~';
