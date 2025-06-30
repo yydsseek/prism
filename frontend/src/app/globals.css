@@ -416,4 +416,104 @@ textarea:active {
 textarea:focus-visible {
   outline: none !important;
   border: none !important;
+}
+
+/* Markdown编辑器增强样式 */
+.markdown-content {
+  line-height: 1.7;
+  color: #374151;
+}
+
+.markdown-content h1:first-child {
+  margin-top: 0;
+}
+
+.markdown-content pre {
+  background: #1f2937 !important;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-content pre code {
+  background: transparent !important;
+  color: #f9fafb !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #6366f1;
+  background: #f8fafc;
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-content blockquote p {
+  margin: 0;
+}
+
+/* 代码高亮主题覆盖 */
+.hljs {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
+/* 列表样式增强 */
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+.markdown-content li > p {
+  margin: 0;
+}
+
+/* 链接样式 */
+.markdown-content a {
+  color: #6366f1;
+  text-decoration: underline;
+  text-decoration-color: #c7d2fe;
+  transition: all 0.2s;
+}
+
+.markdown-content a:hover {
+  color: #4f46e5;
+  text-decoration-color: #6366f1;
+}
+
+/* 图片样式 */
+.markdown-content img {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 分割线样式 */
+.markdown-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #d1d5db, transparent);
+  margin: 2rem 0;
 } 

@@ -30,7 +30,14 @@ import {
   ChevronDown,
   Edit3,
   Monitor,
-  ArrowLeft
+  ArrowLeft,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Table,
+  CheckSquare
 } from 'lucide-react';
 
 interface EditorState {
@@ -229,40 +236,218 @@ export default function CreatePage() {
 
   // 格式化工具函数
   const formatText = (format: string) => {
-    const selection = window.getSelection()?.toString() || '';
-    let formatText = '';
+    if (!editorRef.current) return;
+    
+    const start = editorRef.current.selectionStart;
+    const end = editorRef.current.selectionEnd;
+    const selectedText = editorState.content.substring(start, end);
+    const beforeText = editorState.content.substring(0, start);
+    const afterText = editorState.content.substring(end);
+    
+    let newText = '';
+    let cursorOffset = 0;
     
     switch (format) {
       case 'bold':
-        formatText = selection ? `**${selection}**` : '**粗体文本**';
+        newText = selectedText ? `**${selectedText}**` : '**粗体文本** ';
+        cursorOffset = selectedText ? newText.length : 6;
         break;
       case 'italic':
-        formatText = selection ? `*${selection}*` : '*斜体文本*';
+        newText = selectedText ? `*${selectedText}*` : '*斜体文本* ';
+        cursorOffset = selectedText ? newText.length : 5;
         break;
       case 'code':
-        formatText = selection ? `\`${selection}\`` : '`代码`';
+        newText = selectedText ? `\`${selectedText}\`` : '`代码`';
+        cursorOffset = selectedText ? newText.length : 3;
         break;
       case 'quote':
-        formatText = selection ? `> ${selection}` : '> 引用文本';
-        break;
-      case 'divider':
-        formatText = '\n---\n';
+        // 处理多行引用
+        if (selectedText.includes('\n')) {
+          newText = selectedText.split('\n').map(line => `> ${line}`).join('\n');
+        } else {
+          newText = selectedText ? `> ${selectedText}` : '> 引用文本';
+        }
+        cursorOffset = newText.length;
         break;
       case 'codeblock':
-        formatText = '\n```\n代码块\n```\n';
+        newText = selectedText ? 
+          `\`\`\`\n${selectedText}\n\`\`\`` : 
+          '```javascript\n// 代码块\nconsole.log("Hello World");\n```';
+        cursorOffset = selectedText ? newText.length : 14; // 光标放在语言标识后
+        break;
+      case 'divider':
+        newText = '\n---\n';
+        cursorOffset = newText.length;
+        break;
+      case 'link':
+        newText = selectedText ? 
+          `[${selectedText}](https://example.com)` : 
+          '[链接文本](https://example.com)';
+        cursorOffset = selectedText ? newText.length - 1 : 5;
         break;
       case 'paywall':
-        formatText = '\n[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]\n';
+        newText = '\n[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]\n';
+        cursorOffset = 17; // 光标放在付费内容开始后
         break;
       case 'poll':
-        formatText = '\n[投票]\n选项1\n选项2\n选项3\n[/投票]\n';
+        newText = '\n[投票]\n选项1\n选项2\n选项3\n[/投票]\n';
+        cursorOffset = 7; // 光标放在第一个选项
         break;
       case 'chart':
-        formatText = '\n[金融图表: AAPL]\n';
+        newText = '\n[金融图表: AAPL]\n';
+        cursorOffset = newText.length - 2; // 光标放在股票代码位置
         break;
+      case 'h1':
+        newText = selectedText ? `# ${selectedText}` : '# 一级标题';
+        cursorOffset = selectedText ? newText.length : 3;
+        break;
+      case 'h2':
+        newText = selectedText ? `## ${selectedText}` : '## 二级标题';
+        cursorOffset = selectedText ? newText.length : 4;
+        break;
+      case 'h3':
+        newText = selectedText ? `### ${selectedText}` : '### 三级标题';
+        cursorOffset = selectedText ? newText.length : 5;
+        break;
+      case 'ul':
+        if (selectedText.includes('\n')) {
+          // 多行转换为列表
+          newText = selectedText.split('\n').map(line => line.trim() ? `- ${line.trim()}` : '').join('\n');
+        } else {
+          newText = selectedText ? `- ${selectedText}` : '- 列表项';
+        }
+        cursorOffset = newText.length;
+        break;
+      case 'ol':
+        if (selectedText.includes('\n')) {
+          // 多行转换为有序列表
+          const lines = selectedText.split('\n').filter(line => line.trim());
+          newText = lines.map((line, index) => `${index + 1}. ${line.trim()}`).join('\n');
+        } else {
+          newText = selectedText ? `1. ${selectedText}` : '1. 列表项';
+        }
+        cursorOffset = newText.length;
+        break;
+      case 'table':
+        newText = '\n| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |\n';
+        cursorOffset = 7; // 光标放在第一列标题位置
+        break;
+      case 'checkbox':
+        if (selectedText.includes('\n')) {
+          // 多行转换为任务列表
+          newText = selectedText.split('\n').map(line => line.trim() ? `- [ ] ${line.trim()}` : '').join('\n');
+        } else {
+          newText = selectedText ? `- [ ] ${selectedText}` : '- [ ] 待办事项';
+        }
+        cursorOffset = newText.length;
+        break;
+      case 'strikethrough':
+        newText = selectedText ? `~~${selectedText}~~` : '~~删除线文本~~';
+        cursorOffset = selectedText ? newText.length : 2;
+        break;
+      default:
+        return;
     }
     
-    insertAtCursor(formatText);
+    const finalContent = beforeText + newText + afterText;
+    setEditorState(prev => ({ ...prev, content: finalContent }));
+    
+    // 设置光标位置
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.focus();
+        const newCursorPos = start + cursorOffset;
+        editorRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
+  // 处理键盘输入增强
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const { key, ctrlKey, metaKey, shiftKey } = e;
+    const isCmd = ctrlKey || metaKey;
+    
+    // 自动列表
+    if (key === 'Enter') {
+      const start = editorRef.current?.selectionStart || 0;
+      const beforeCursor = editorState.content.substring(0, start);
+      const currentLine = beforeCursor.split('\n').pop() || '';
+      
+      // 检查是否在列表中
+      const listMatch = currentLine.match(/^(\s*)([-*+]|\d+\.)\s/);
+      if (listMatch) {
+        e.preventDefault();
+        const indent = listMatch[1];
+        const marker = listMatch[2];
+        
+        // 如果当前行只有列表标记，删除它
+        if (currentLine.trim() === marker) {
+          const newContent = editorState.content.substring(0, start - currentLine.length) + 
+                           editorState.content.substring(start);
+          setEditorState(prev => ({ ...prev, content: newContent }));
+          setTimeout(() => {
+            if (editorRef.current) {
+              editorRef.current.setSelectionRange(start - currentLine.length, start - currentLine.length);
+            }
+          }, 0);
+        } else {
+          // 继续列表
+          const nextMarker = marker.match(/\d+/) ? 
+            `${parseInt(marker) + 1}.` : marker;
+          insertAtCursor(`\n${indent}${nextMarker} `);
+        }
+        return;
+      }
+      
+      // 检查是否在引用中
+      if (currentLine.startsWith('> ')) {
+        e.preventDefault();
+        insertAtCursor('\n> ');
+        return;
+      }
+    }
+    
+    // Tab 键处理缩进
+    if (key === 'Tab') {
+      e.preventDefault();
+      if (shiftKey) {
+        // Shift+Tab 减少缩进
+        const start = editorRef.current?.selectionStart || 0;
+        const end = editorRef.current?.selectionEnd || 0;
+        const beforeSelection = editorState.content.substring(0, start);
+        const selection = editorState.content.substring(start, end);
+        const afterSelection = editorState.content.substring(end);
+        
+        const lines = selection.split('\n');
+        const unindentedLines = lines.map(line => 
+          line.startsWith('  ') ? line.substring(2) : line
+        );
+        
+        const newContent = beforeSelection + unindentedLines.join('\n') + afterSelection;
+        setEditorState(prev => ({ ...prev, content: newContent }));
+      } else {
+        // Tab 增加缩进
+        const start = editorRef.current?.selectionStart || 0;
+        const end = editorRef.current?.selectionEnd || 0;
+        
+        if (start === end) {
+          // 单纯插入制表符
+          insertAtCursor('  ');
+        } else {
+          // 多行缩进
+          const beforeSelection = editorState.content.substring(0, start);
+          const selection = editorState.content.substring(start, end);
+          const afterSelection = editorState.content.substring(end);
+          
+          const lines = selection.split('\n');
+          const indentedLines = lines.map(line => '  ' + line);
+          
+          const newContent = beforeSelection + indentedLines.join('\n') + afterSelection;
+          setEditorState(prev => ({ ...prev, content: newContent }));
+        }
+      }
+      return;
+    }
   };
 
   // 文件上传处理
@@ -481,6 +666,7 @@ export default function CreatePage() {
         <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-16 z-40 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-y-1">
+              {/* 文本格式 */}
               <button
                 onClick={() => formatText('bold')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
@@ -498,6 +684,14 @@ export default function CreatePage() {
               </button>
               
               <button
+                onClick={() => formatText('strikethrough')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="删除线"
+              >
+                <Underline className="w-4 h-4" />
+              </button>
+              
+              <button
                 onClick={() => formatText('code')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
                 title="行内代码"
@@ -505,12 +699,92 @@ export default function CreatePage() {
                 <Code className="w-4 h-4" />
               </button>
               
+              <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
+              
+              {/* 标题 */}
+              <button
+                onClick={() => formatText('h1')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="一级标题"
+              >
+                <Heading1 className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('h2')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="二级标题"
+              >
+                <Heading2 className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('h3')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="三级标题"
+              >
+                <Heading3 className="w-4 h-4" />
+              </button>
+              
+              <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
+              
+              {/* 列表和表格 */}
+              <button
+                onClick={() => formatText('ul')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="无序列表"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('ol')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="有序列表"
+              >
+                <ListOrdered className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('checkbox')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="任务列表"
+              >
+                <CheckSquare className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('table')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="插入表格"
+              >
+                <Table className="w-4 h-4" />
+              </button>
+              
+              <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
+              
               <button
                 onClick={() => formatText('quote')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
                 title="引用 (Ctrl+Shift+Q)"
               >
                 <Quote className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('link')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="插入链接"
+              >
+                <Link className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('codeblock')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="代码块 (Ctrl+Shift+C)"
+              >
+                <Code className="w-4 h-4" />
               </button>
               
               <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
@@ -550,14 +824,6 @@ export default function CreatePage() {
               </button>
               
               <button
-                onClick={() => formatText('codeblock')}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                title="代码块 (Ctrl+Shift+C)"
-              >
-                <Code className="w-4 h-4" />
-              </button>
-              
-              <button
                 onClick={() => formatText('chart')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
                 title="金融图表"
@@ -585,9 +851,6 @@ export default function CreatePage() {
               
               {/* 右侧工具 */}
               <div className="flex items-center space-x-2 ml-auto">
-                <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
-                  字数: {editorState.content.length}
-                </span>
                 {isAutoSaving && (
                   <span className="text-xs sm:text-sm text-blue-600 flex items-center">
                     <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" />
@@ -674,6 +937,7 @@ export default function CreatePage() {
                     WebkitAppearance: 'none',
                     MozAppearance: 'none'
                   }}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </div>
