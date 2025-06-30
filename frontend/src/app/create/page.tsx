@@ -970,7 +970,8 @@ export default function CreatePage() {
 💡 提示：
 - 第一行会自动作为标题显示
 - 支持完整的 Markdown 语法，如# h1 ## h2
-- 可以直接拖拽文件上传`}
+- 可以直接拖拽文件上传
+- 工具栏可以插入付费墙、金融图表等`}
                     value={editorState.content}
                     onChange={(e) => {
                       setEditorState(prev => ({ ...prev, content: e.target.value }));
