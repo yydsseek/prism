@@ -962,8 +962,15 @@ export default function CreatePage() {
                 {/* 统一的内容编辑器 */}
                 <textarea
                   ref={editorRef}
-                  placeholder="# 文章标题&#10;&#10;在这里开始写作...&#10;&#10;💡 提示：&#10;- 第一行会自动作为标题显示&#10;- 支持完整的 Markdown 语法&#10;- 可以直接拖拽文件上传&#10;- 使用工具栏快速插入特殊内容&#10;- 使用 # 创建标题，## 创建副标题"
-                  // value={editorState.content}
+                  placeholder={`# 文章标题
+
+在这里开始写作...
+
+💡 提示：
+- 第一行会自动作为标题显示
+- 支持完整的 Markdown 语法，如# h1 ## h2
+- 可以直接拖拽文件上传`}
+                  value={editorState.content}
                   onChange={(e) => {
                     setEditorState(prev => ({ ...prev, content: e.target.value }));
                     setCursorPosition(e.target.selectionStart);
