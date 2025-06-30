@@ -354,25 +354,6 @@
   opacity: 1;
 }
 
-/* 优雅的焦点动画 */
-@keyframes gentle-glow {
-  0%, 100% {
-    box-shadow: 
-      0 0 0 1px rgba(59, 130, 246, 0.15),
-      0 4px 12px rgba(59, 130, 246, 0.05);
-  }
-  50% {
-    box-shadow: 
-      0 0 0 1px rgba(59, 130, 246, 0.25),
-      0 8px 24px rgba(59, 130, 246, 0.08);
-  }
-}
-
-/* 内容区域特殊效果 */
-.content-area-enhanced:focus {
-  animation: gentle-glow 3s ease-in-out infinite;
-}
-
 /* 玻璃态毛玻璃效果 */
 .glass-morphism {
   background: rgba(255, 255, 255, 0.8);
@@ -389,4 +370,50 @@
   background: linear-gradient(white, white) padding-box,
               linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.1)) border-box;
   border: 1px solid transparent;
+}
+
+/* 优雅的焦点动画 - 已禁用 */
+/*
+@keyframes gentle-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 1px rgba(59, 130, 246, 0.15),
+      0 4px 12px rgba(59, 130, 246, 0.05);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 1px rgba(59, 130, 246, 0.25),
+      0 8px 24px rgba(59, 130, 246, 0.08);
+  }
+}
+*/
+
+/* 彻底移除textarea的所有边框和轮廓效果 */
+textarea {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+textarea:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+textarea:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除浏览器默认的焦点环 */
+textarea:focus-visible {
+  outline: none !important;
+  border: none !important;
 } 

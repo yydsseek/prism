@@ -4,12 +4,10 @@ import { DollarSign, BarChart3, TrendingUp } from 'lucide-react';
 
 interface MarkdownPreviewProps {
   content: string;
-  title?: string;
-  subtitle?: string;
   coverImage?: string;
 }
 
-export default function MarkdownPreview({ content, title, subtitle, coverImage }: MarkdownPreviewProps) {
+export default function MarkdownPreview({ content, coverImage }: MarkdownPreviewProps) {
   // 解析markdown内容
   const parseContent = (text: string) => {
     if (!text) return [];
@@ -205,19 +203,6 @@ export default function MarkdownPreview({ content, title, subtitle, coverImage }
             className="w-full h-64 object-cover rounded-lg"
           />
         </div>
-      )}
-      
-      {/* 标题和副标题 */}
-      {title && (
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          {title}
-        </h1>
-      )}
-      
-      {subtitle && (
-        <p className="text-xl text-gray-600 mb-8">
-          {subtitle}
-        </p>
       )}
       
       {/* 内容 */}

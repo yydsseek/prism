@@ -34,8 +34,6 @@ import {
 } from 'lucide-react';
 
 interface EditorState {
-  title: string;
-  subtitle: string;
   content: string;
   coverImage: string;
   status: 'draft' | 'published';
@@ -61,8 +59,6 @@ export default function CreatePage() {
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [editorState, setEditorState] = useState<EditorState>({
-    title: '',
-    subtitle: '',
     content: '',
     coverImage: '',
     status: 'draft',
@@ -89,7 +85,7 @@ export default function CreatePage() {
 
   // 自动保存功能
   const autoSave = useCallback(async () => {
-    if (!editorState.title && !editorState.content) return;
+    if (!editorState.content) return;
     
     setIsAutoSaving(true);
     try {
@@ -109,7 +105,7 @@ export default function CreatePage() {
       const historyEntry: HistoryEntry = {
         id: Date.now().toString(),
         timestamp: new Date(),
-        title: editorState.title || '无标题',
+        title: editorState.content.split('\n')[0] || '无标题',
         content: editorState.content.substring(0, 100),
         action: '自动保存'
       };
@@ -201,6 +197,15 @@ export default function CreatePage() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [autoSave]);
+
+  // 自动调整textarea高度
+  useEffect(() => {
+    if (editorRef.current) {
+      const textarea = editorRef.current;
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.max(textarea.scrollHeight, 600) + 'px';
+    }
+  }, [editorState.content]);
 
   // 插入文本到光标位置
   const insertAtCursor = (text: string) => {
@@ -335,7 +340,6 @@ export default function CreatePage() {
   const restoreFromHistory = (historyEntry: HistoryEntry) => {
     setEditorState(prev => ({
       ...prev,
-      title: historyEntry.title,
       content: historyEntry.content
     }));
     setShowHistory(false);
@@ -643,37 +647,33 @@ export default function CreatePage() {
                   </div>
                 )}
                 
-                {/* 标题输入 */}
-                <input
-                  type="text"
-                  placeholder="文章标题..."
-                  value={editorState.title}
-                  onChange={(e) => setEditorState(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full text-4xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-4 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-gray-50/60 hover:to-blue-50/30 focus:bg-gradient-to-r focus:from-blue-50/40 focus:via-purple-50/20 focus:to-indigo-50/40 focus:shadow-lg focus:shadow-blue-500/10 focus:ring-1 focus:ring-blue-500/20"
-                />
-                
-                {/* 副标题输入 */}
-                <input
-                  type="text"
-                  placeholder="添加副标题..."
-                  value={editorState.subtitle}
-                  onChange={(e) => setEditorState(prev => ({ ...prev, subtitle: e.target.value }))}
-                  className="w-full text-xl text-gray-600 placeholder-gray-400 border-none outline-none mb-8 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/25 focus:bg-gradient-to-r focus:from-blue-50/35 focus:via-purple-50/15 focus:to-indigo-50/35 focus:shadow-md focus:shadow-blue-500/8 focus:ring-1 focus:ring-blue-500/15"
-                />
-                
-
-                
-                {/* 内容编辑器 */}
+                {/* 统一的内容编辑器 */}
                 <textarea
                   ref={editorRef}
-                  placeholder="开始写作...&#10;&#10;💡 提示：&#10;- 支持 Markdown 语法&#10;- 可以直接拖拽文件上传&#10;- 使用工具栏快速插入特殊内容"
+                  placeholder="# 文章标题&#10;&#10;在这里开始写作...&#10;&#10;💡 提示：&#10;- 第一行会自动作为标题显示&#10;- 支持完整的 Markdown 语法&#10;- 可以直接拖拽文件上传&#10;- 使用工具栏快速插入特殊内容&#10;- 使用 # 创建标题，## 创建副标题"
                   value={editorState.content}
                   onChange={(e) => {
                     setEditorState(prev => ({ ...prev, content: e.target.value }));
                     setCursorPosition(e.target.selectionStart);
+                    // 自动调整高度
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.max(e.target.scrollHeight, 600) + 'px';
                   }}
-                  className="w-full min-h-96 text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none mt-4 px-4 py-4 rounded-xl transition-all duration-300 hover:bg-gradient-to-br hover:from-gray-50/40 hover:via-blue-50/20 hover:to-gray-50/40 focus:bg-gradient-to-br focus:from-blue-50/30 focus:via-white/95 focus:to-purple-50/25 focus:shadow-xl focus:shadow-blue-500/5 focus:ring-1 focus:ring-blue-500/15 backdrop-blur-sm content-area-enhanced"
-                  style={{ fontFamily: 'ui-serif, Georgia, serif', lineHeight: '1.75' }}
+                  className="w-full text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none rounded-xl transition-all duration-300"
+                  style={{ 
+                    fontFamily: 'ui-serif, Georgia, serif', 
+                    lineHeight: '1.75',
+                    padding: '0',
+                    background: 'transparent',
+                    minHeight: '600px',
+                    height: 'auto',
+                    overflow: 'hidden',
+                    border: 'none',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none'
+                  }}
                 />
               </div>
             </div>
@@ -689,8 +689,6 @@ export default function CreatePage() {
                 </div>
                 <div className="prose prose-lg max-w-none">
                   <MarkdownPreview
-                    title={editorState.title}
-                    subtitle={editorState.subtitle}
                     content={editorState.content}
                     coverImage={editorState.coverImage}
                   />
