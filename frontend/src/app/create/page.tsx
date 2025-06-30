@@ -915,10 +915,10 @@ export default function CreatePage() {
 
       {/* 主编辑区域 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className={`${viewMode === 'split' ? 'grid grid-cols-2 gap-6' : ''}`}>
+        <div className={`${viewMode === 'split' ? 'grid grid-cols-2 gap-6' : 'flex justify-center'}`}>
           {/* 编辑器部分 */}
           {(viewMode === 'edit' || viewMode === 'split') && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${viewMode === 'edit' ? 'max-w-4xl w-full' : ''}`}>
               {/* 封面图片 */}
               {editorState.coverImage && (
                 <div className="relative">
@@ -960,9 +960,10 @@ export default function CreatePage() {
                 )}
                 
                 {/* 统一的内容编辑器 */}
-                <textarea
-                  ref={editorRef}
-                  placeholder={`# 文章标题
+                <div className="max-w-2xl mx-auto">
+                  <textarea
+                    ref={editorRef}
+                    placeholder={`# 文章标题
 
 在这里开始写作...
 
@@ -970,31 +971,32 @@ export default function CreatePage() {
 - 第一行会自动作为标题显示
 - 支持完整的 Markdown 语法，如# h1 ## h2
 - 可以直接拖拽文件上传`}
-                  value={editorState.content}
-                  onChange={(e) => {
-                    setEditorState(prev => ({ ...prev, content: e.target.value }));
-                    setCursorPosition(e.target.selectionStart);
-                    // 自动调整高度
-                    e.target.style.height = 'auto';
-                    e.target.style.height = Math.max(e.target.scrollHeight, 600) + 'px';
-                  }}
-                  className="w-full text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none rounded-xl transition-all duration-300"
-                  style={{ 
-                    fontFamily: 'ui-serif, Georgia, serif', 
-                    lineHeight: '1.75',
-                    padding: '0',
-                    background: 'transparent',
-                    minHeight: '600px',
-                    height: 'auto',
-                    overflow: 'hidden',
-                    border: 'none',
-                    outline: 'none',
-                    boxShadow: 'none',
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none'
-                  }}
-                  onKeyDown={handleKeyDown}
-                />
+                    value={editorState.content}
+                    onChange={(e) => {
+                      setEditorState(prev => ({ ...prev, content: e.target.value }));
+                      setCursorPosition(e.target.selectionStart);
+                      // 自动调整高度
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.max(e.target.scrollHeight, 600) + 'px';
+                    }}
+                    className="w-full text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none rounded-xl transition-all duration-300"
+                    style={{ 
+                      fontFamily: 'ui-serif, Georgia, serif', 
+                      lineHeight: '1.75',
+                      padding: '0',
+                      background: 'transparent',
+                      minHeight: '600px',
+                      height: 'auto',
+                      overflow: 'hidden',
+                      border: 'none',
+                      outline: 'none',
+                      boxShadow: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none'
+                    }}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
               </div>
             </div>
           )}

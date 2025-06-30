@@ -20,6 +20,18 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
     
     let processed = text;
     
+    // 自动将第一行转换为H1标题（如果不是已有的标题格式）
+    const lines = processed.split('\n');
+    if (lines.length > 0 && lines[0].trim()) {
+      const firstLine = lines[0].trim();
+      // 检查第一行是否已经是标题格式
+      if (!firstLine.startsWith('#')) {
+        // 如果不是标题格式，自动添加H1标记
+        lines[0] = `# ${firstLine}`;
+        processed = lines.join('\n');
+      }
+    }
+    
     // 处理付费墙
     processed = processed.replace(
       /\[付费内容开始\]([\s\S]*?)\[付费内容结束\]/g,
