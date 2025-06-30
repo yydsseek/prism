@@ -873,6 +873,14 @@ export default function CreatePage() {
               </button>
               
               <button
+                onClick={() => formatText('poll')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
+                title="投票"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+
+              <button
                 onClick={() => formatText('chart')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
                 title="金融图表"
@@ -888,13 +896,7 @@ export default function CreatePage() {
                 <DollarSign className="w-4 h-4" />
               </button>
               
-              <button
-                onClick={() => formatText('poll')}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
-                title="投票"
-              >
-                <BarChart3 className="w-4 h-4" />
-              </button>
+
 
               <div className="flex-1"></div>
               
