@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../lib/auth-context';
 import { useRouter } from 'next/navigation';
-import TopNavBar from '../../components/TopNavBar';
+
 import MarkdownPreview from '../../components/MarkdownPreview';
 import EditorShortcuts from '../../components/EditorShortcuts';
 import { 
@@ -29,7 +29,8 @@ import {
   Trash2,
   ChevronDown,
   Edit3,
-  Monitor
+  Monitor,
+  ArrowLeft
 } from 'lucide-react';
 
 interface EditorState {
@@ -379,33 +380,96 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopNavBar />
-      
-      {/* 编辑器头部 */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      {/* 编辑器顶部栏 */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            {/* 左侧：返回按钮和状态 */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                title="返回控制台"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1 rotate-90" />
+                <span className="hidden sm:inline">返回</span>
+                <span className="sm:hidden">←</span>
+              </button>
+              
+              <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+              
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 草稿
               </span>
+              
               {isAutoSaving && (
                 <span className="text-sm text-gray-500 flex items-center">
                   <Save className="w-4 h-4 mr-1 animate-spin" />
-                  保存中...
+                  <span className="hidden sm:inline">保存中...</span>
                 </span>
               )}
-              {editorState.lastSaved && (
-                <span className="text-sm text-gray-500">
+              
+              {editorState.lastSaved && !isAutoSaving && (
+                <span className="text-sm text-gray-500 hidden md:inline">
                   上次保存: {editorState.lastSaved.toLocaleTimeString()}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center space-x-3">
+            {/* 中间：视图模式切换 */}
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('edit')}
+                className={`flex items-center px-3 py-2 text-sm transition-colors ${
+                  viewMode === 'edit' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <Edit3 className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">编辑</span>
+              </button>
+              <button
+                onClick={() => setViewMode('split')}
+                className={`flex items-center px-3 py-2 text-sm transition-colors ${
+                  viewMode === 'split' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <Monitor className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">分屏</span>
+              </button>
+              <button
+                onClick={() => setViewMode('preview')}
+                className={`flex items-center px-3 py-2 text-sm transition-colors ${
+                  viewMode === 'preview' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">预览</span>
+              </button>
+            </div>
+            
+            {/* 右侧：工具和发布按钮 */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* 移动端工具菜单 */}
+              <div className="relative sm:hidden">
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  title="工具"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {/* 桌面端工具按钮 */}
               <button
                 onClick={() => setShowHistory(true)}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors hidden sm:block"
                 title="查看历史"
               >
                 <History className="w-5 h-5" />
@@ -413,51 +477,15 @@ export default function CreatePage() {
               
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors hidden sm:block"
                 title="设置"
               >
                 <Settings className="w-5 h-5" />
               </button>
               
-              <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                <button
-                  onClick={() => setViewMode('edit')}
-                  className={`flex items-center px-3 py-2 text-sm transition-colors ${
-                    viewMode === 'edit' 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  <Edit3 className="w-4 h-4 mr-1" />
-                  编辑
-                </button>
-                <button
-                  onClick={() => setViewMode('split')}
-                  className={`flex items-center px-3 py-2 text-sm transition-colors ${
-                    viewMode === 'split' 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  <Monitor className="w-4 h-4 mr-1" />
-                  分屏
-                </button>
-                <button
-                  onClick={() => setViewMode('preview')}
-                  className={`flex items-center px-3 py-2 text-sm transition-colors ${
-                    viewMode === 'preview' 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  预览
-                </button>
-              </div>
-              
               <button
                 onClick={publishPost}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium text-sm"
               >
                 发布
               </button>
@@ -468,9 +496,9 @@ export default function CreatePage() {
 
       {/* 固定工具栏 */}
       {(viewMode === 'edit' || viewMode === 'split') && (
-        <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-16 z-40">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-y-2">
+        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-16 z-40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-y-1">
               <button
                 onClick={() => formatText('bold')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
