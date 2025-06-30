@@ -466,6 +466,131 @@ export default function CreatePage() {
         </div>
       </div>
 
+      {/* 固定工具栏 */}
+      {(viewMode === 'edit' || viewMode === 'split') && (
+        <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-16 z-40">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-y-2">
+              <button
+                onClick={() => formatText('bold')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="粗体 (Ctrl+B)"
+              >
+                <Bold className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('italic')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="斜体 (Ctrl+I)"
+              >
+                <Italic className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('code')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="行内代码"
+              >
+                <Code className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('quote')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="引用 (Ctrl+Shift+Q)"
+              >
+                <Quote className="w-4 h-4" />
+              </button>
+              
+              <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
+              
+              <button
+                onClick={() => imageInputRef.current?.click()}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="插入图片"
+              >
+                <Image className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => videoInputRef.current?.click()}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="插入视频"
+              >
+                <Video className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="插入文件"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+              
+              <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
+              
+              <button
+                onClick={() => formatText('divider')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="分割线 (Ctrl+Shift+L)"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('codeblock')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+                title="代码块 (Ctrl+Shift+C)"
+              >
+                <Code className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('chart')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
+                title="金融图表"
+              >
+                <TrendingUp className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('paywall')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
+                title="付费墙"
+              >
+                <DollarSign className="w-4 h-4" />
+              </button>
+              
+              <button
+                onClick={() => formatText('poll')}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
+                title="投票"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+
+              <div className="flex-1"></div>
+              
+              {/* 右侧工具 */}
+              <div className="flex items-center space-x-2 ml-auto">
+                <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
+                  字数: {editorState.content.length}
+                </span>
+                {isAutoSaving && (
+                  <span className="text-xs sm:text-sm text-blue-600 flex items-center">
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" />
+                    <span className="hidden sm:inline">保存中...</span>
+                    <span className="sm:hidden">保存</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 主编辑区域 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className={`${viewMode === 'split' ? 'grid grid-cols-2 gap-6' : ''}`}>
@@ -490,10 +615,17 @@ export default function CreatePage() {
               )}
               
               <div 
-                className={`p-8 ${isDragging ? 'bg-indigo-50 border-2 border-dashed border-indigo-300' : ''}`}
+                className={`p-8 relative ${isDragging ? 'bg-indigo-50 border-2 border-dashed border-indigo-300' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                style={{
+                  backgroundImage: isDragging ? 'none' : `
+                    radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.02) 1px, transparent 0),
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.4) 100%)
+                  `,
+                  backgroundSize: '20px 20px, 100% 100%'
+                }}
               >
                 {isDragging && (
                   <div className="absolute inset-0 bg-indigo-50 bg-opacity-90 flex items-center justify-center z-10">
@@ -511,7 +643,7 @@ export default function CreatePage() {
                   placeholder="文章标题..."
                   value={editorState.title}
                   onChange={(e) => setEditorState(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full text-4xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-4"
+                  className="w-full text-4xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-4 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-gray-50/60 hover:to-blue-50/30 focus:bg-gradient-to-r focus:from-blue-50/40 focus:via-purple-50/20 focus:to-indigo-50/40 focus:shadow-lg focus:shadow-blue-500/10 focus:ring-1 focus:ring-blue-500/20"
                 />
                 
                 {/* 副标题输入 */}
@@ -520,111 +652,10 @@ export default function CreatePage() {
                   placeholder="添加副标题..."
                   value={editorState.subtitle}
                   onChange={(e) => setEditorState(prev => ({ ...prev, subtitle: e.target.value }))}
-                  className="w-full text-xl text-gray-600 placeholder-gray-400 border-none outline-none mb-8"
+                  className="w-full text-xl text-gray-600 placeholder-gray-400 border-none outline-none mb-8 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/25 focus:bg-gradient-to-r focus:from-blue-50/35 focus:via-purple-50/15 focus:to-indigo-50/35 focus:shadow-md focus:shadow-blue-500/8 focus:ring-1 focus:ring-blue-500/15"
                 />
                 
-                {/* 工具栏 */}
-                <div className="flex items-center space-x-2 mb-6 p-3 bg-gray-50 rounded-lg flex-wrap">
-                  <button
-                    onClick={() => formatText('bold')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="粗体"
-                  >
-                    <Bold className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('italic')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="斜体"
-                  >
-                    <Italic className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('code')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="行内代码"
-                  >
-                    <Code className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('quote')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="引用"
-                  >
-                    <Quote className="w-4 h-4" />
-                  </button>
-                  
-                  <div className="w-px h-6 bg-gray-300"></div>
-                  
-                  <button
-                    onClick={() => imageInputRef.current?.click()}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="插入图片"
-                  >
-                    <Image className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => videoInputRef.current?.click()}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="插入视频"
-                  >
-                    <Video className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="插入文件"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </button>
-                  
-                  <div className="w-px h-6 bg-gray-300"></div>
-                  
-                  <button
-                    onClick={() => formatText('divider')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="分割线"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('codeblock')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="代码块"
-                  >
-                    <Code className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('chart')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="金融图表"
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('paywall')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="付费墙"
-                  >
-                    <DollarSign className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => formatText('poll')}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                    title="投票"
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                  </button>
-                </div>
+
                 
                 {/* 内容编辑器 */}
                 <textarea
@@ -635,7 +666,7 @@ export default function CreatePage() {
                     setEditorState(prev => ({ ...prev, content: e.target.value }));
                     setCursorPosition(e.target.selectionStart);
                   }}
-                  className="w-full min-h-96 text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none"
+                  className="w-full min-h-96 text-lg text-gray-900 placeholder-gray-400 border-none outline-none resize-none mt-4 px-4 py-4 rounded-xl transition-all duration-300 hover:bg-gradient-to-br hover:from-gray-50/40 hover:via-blue-50/20 hover:to-gray-50/40 focus:bg-gradient-to-br focus:from-blue-50/30 focus:via-white/95 focus:to-purple-50/25 focus:shadow-xl focus:shadow-blue-500/5 focus:ring-1 focus:ring-blue-500/15 backdrop-blur-sm content-area-enhanced"
                   style={{ fontFamily: 'ui-serif, Georgia, serif', lineHeight: '1.75' }}
                 />
                 
@@ -666,7 +697,7 @@ export default function CreatePage() {
                       value={currentTag}
                       onChange={(e) => setCurrentTag(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3 py-2 border border-gray-200/60 rounded-xl transition-all duration-300 hover:border-gray-300/80 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/30 focus:outline-none focus:border-blue-400/60 focus:bg-gradient-to-r focus:from-blue-50/40 focus:to-purple-50/30 focus:ring-1 focus:ring-blue-500/20 focus:shadow-md focus:shadow-blue-500/10 backdrop-blur-sm"
                     />
                     <button
                       onClick={addTag}
