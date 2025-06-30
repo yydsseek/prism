@@ -391,7 +391,7 @@ export default function CreatePage() {
                 className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
                 title="返回控制台"
               >
-                <ArrowLeft className="w-4 h-4 mr-1 rotate-90" />
+                <ArrowLeft className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">返回</span>
                 <span className="sm:hidden">←</span>
               </button>
