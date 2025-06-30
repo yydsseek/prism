@@ -244,6 +244,15 @@ export default function CreatePage() {
     const beforeText = editorState.content.substring(0, start);
     const afterText = editorState.content.substring(end);
     
+    // 检查前后是否需要换行
+    const needsNewlineBefore = () => {
+      return beforeText.length > 0 && !beforeText.endsWith('\n');
+    };
+    
+    const needsNewlineAfter = () => {
+      return afterText.length > 0 && !afterText.startsWith('\n');
+    };
+    
     let newText = '';
     let cursorOffset = 0;
     
@@ -261,19 +270,9 @@ export default function CreatePage() {
         cursorOffset = selectedText ? newText.length : 3;
         break;
       case 'quote':
-        // 引用必须在新行开始和结束
-        let quotePrefix = '';
-        let quoteSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          quotePrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          quoteSuffix = '\n';
-        }
+        // 引用需要在新行开始
+        const quotePrefix = needsNewlineBefore() ? '\n' : '';
+        const quoteSuffix = needsNewlineAfter() ? '\n' : '';
         
         if (selectedText.includes('\n')) {
           newText = quotePrefix + selectedText.split('\n').map(line => `> ${line}`).join('\n') + quoteSuffix;
@@ -283,19 +282,9 @@ export default function CreatePage() {
         cursorOffset = newText.length - quoteSuffix.length;
         break;
       case 'codeblock':
-        // 代码块必须前后换行
-        let codePrefix = '';
-        let codeSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          codePrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          codeSuffix = '\n';
-        }
+        // 代码块需要前后换行
+        const codePrefix = needsNewlineBefore() ? '\n' : '';
+        const codeSuffix = needsNewlineAfter() ? '\n' : '';
         
         newText = codePrefix + (selectedText ? 
           `\`\`\`\n${selectedText}\n\`\`\`` : 
@@ -303,20 +292,9 @@ export default function CreatePage() {
         cursorOffset = selectedText ? newText.length - codeSuffix.length : codePrefix.length + 14;
         break;
       case 'divider':
-        // 分割线必须前后换行
-        let dividerPrefix = '';
-        let dividerSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          dividerPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          dividerSuffix = '\n';
-        }
-        
+        // 分割线需要前后换行
+        const dividerPrefix = needsNewlineBefore() ? '\n' : '';
+        const dividerSuffix = needsNewlineAfter() ? '\n' : '';
         newText = dividerPrefix + '---' + dividerSuffix;
         cursorOffset = newText.length;
         break;
@@ -327,127 +305,51 @@ export default function CreatePage() {
         cursorOffset = selectedText ? newText.length - 1 : 5;
         break;
       case 'paywall':
-        // 付费墙必须前后换行
-        let paywallPrefix = '';
-        let paywallSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          paywallPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          paywallSuffix = '\n';
-        }
-        
+        // 付费墙需要前后换行
+        const paywallPrefix = needsNewlineBefore() ? '\n' : '';
+        const paywallSuffix = needsNewlineAfter() ? '\n' : '';
         newText = paywallPrefix + '[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]' + paywallSuffix;
         cursorOffset = paywallPrefix.length + 17;
         break;
       case 'poll':
-        // 投票必须前后换行
-        let pollPrefix = '';
-        let pollSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          pollPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          pollSuffix = '\n';
-        }
-        
+        // 投票需要前后换行
+        const pollPrefix = needsNewlineBefore() ? '\n' : '';
+        const pollSuffix = needsNewlineAfter() ? '\n' : '';
         newText = pollPrefix + '[投票]\n选项1\n选项2\n选项3\n[/投票]' + pollSuffix;
         cursorOffset = pollPrefix.length + 7;
         break;
       case 'chart':
-        // 图表必须前后换行
-        let chartPrefix = '';
-        let chartSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          chartPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          chartSuffix = '\n';
-        }
-        
+        // 图表需要前后换行
+        const chartPrefix = needsNewlineBefore() ? '\n' : '';
+        const chartSuffix = needsNewlineAfter() ? '\n' : '';
         newText = chartPrefix + '[金融图表: AAPL]' + chartSuffix;
         cursorOffset = newText.length - 2 - chartSuffix.length;
         break;
       case 'h1':
-        // 标题必须在新行开始和结束
-        let h1Prefix = '';
-        let h1Suffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          h1Prefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          h1Suffix = '\n';
-        }
-        
+        // 标题需要在新行开始
+        const h1Prefix = needsNewlineBefore() ? '\n' : '';
+        const h1Suffix = needsNewlineAfter() ? '\n' : '';
         newText = h1Prefix + (selectedText ? `# ${selectedText}` : '# 一级标题') + h1Suffix;
         cursorOffset = selectedText ? newText.length - h1Suffix.length : h1Prefix.length + 6;
         break;
       case 'h2':
-        // 标题必须在新行开始和结束
-        let h2Prefix = '';
-        let h2Suffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          h2Prefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          h2Suffix = '\n';
-        }
-        
+        // 标题需要在新行开始
+        const h2Prefix = needsNewlineBefore() ? '\n' : '';
+        const h2Suffix = needsNewlineAfter() ? '\n' : '';
         newText = h2Prefix + (selectedText ? `## ${selectedText}` : '## 二级标题') + h2Suffix;
         cursorOffset = selectedText ? newText.length - h2Suffix.length : h2Prefix.length + 7;
         break;
       case 'h3':
-        // 标题必须在新行开始和结束
-        let h3Prefix = '';
-        let h3Suffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          h3Prefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          h3Suffix = '\n';
-        }
-        
+        // 标题需要在新行开始
+        const h3Prefix = needsNewlineBefore() ? '\n' : '';
+        const h3Suffix = needsNewlineAfter() ? '\n' : '';
         newText = h3Prefix + (selectedText ? `### ${selectedText}` : '### 三级标题') + h3Suffix;
-        cursorOffset = selectedText ? newText.length - h3Suffix.length : h3Prefix.length + 7;
+        cursorOffset = selectedText ? newText.length - h3Suffix.length : h3Prefix.length + 8;
         break;
       case 'ul':
-        // 列表必须在新行开始和结束
-        let ulPrefix = '';
-        let ulSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          ulPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          ulSuffix = '\n';
-        }
+        // 列表需要在新行开始
+        const ulPrefix = needsNewlineBefore() ? '\n' : '';
+        const ulSuffix = needsNewlineAfter() ? '\n' : '';
         
         if (selectedText.includes('\n')) {
           newText = ulPrefix + selectedText.split('\n').map(line => line.trim() ? `- ${line.trim()}` : '').join('\n') + ulSuffix;
@@ -457,19 +359,9 @@ export default function CreatePage() {
         cursorOffset = newText.length - ulSuffix.length;
         break;
       case 'ol':
-        // 有序列表必须在新行开始和结束
-        let olPrefix = '';
-        let olSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          olPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          olSuffix = '\n';
-        }
+        // 有序列表需要在新行开始
+        const olPrefix = needsNewlineBefore() ? '\n' : '';
+        const olSuffix = needsNewlineAfter() ? '\n' : '';
         
         if (selectedText.includes('\n')) {
           const lines = selectedText.split('\n').filter(line => line.trim());
@@ -480,37 +372,16 @@ export default function CreatePage() {
         cursorOffset = newText.length - olSuffix.length;
         break;
       case 'table':
-        // 表格必须前后换行
-        let tablePrefix = '';
-        let tableSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          tablePrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          tableSuffix = '\n';
-        }
-        
+        // 表格需要前后换行
+        const tablePrefix = needsNewlineBefore() ? '\n' : '';
+        const tableSuffix = needsNewlineAfter() ? '\n' : '';
         newText = tablePrefix + '| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |' + tableSuffix;
         cursorOffset = tablePrefix.length + 7;
         break;
       case 'checkbox':
-        // 任务列表必须在新行开始和结束
-        let checkboxPrefix = '';
-        let checkboxSuffix = '';
-        
-        // 如果前面有内容且不是换行符，添加换行
-        if (beforeText.length > 0 && !beforeText.endsWith('\n')) {
-          checkboxPrefix = '\n';
-        }
-        
-        // 如果后面有内容且不是换行符，添加换行
-        if (afterText.length > 0 && !afterText.startsWith('\n')) {
-          checkboxSuffix = '\n';
-        }
+        // 任务列表需要在新行开始
+        const checkboxPrefix = needsNewlineBefore() ? '\n' : '';
+        const checkboxSuffix = needsNewlineAfter() ? '\n' : '';
         
         if (selectedText.includes('\n')) {
           newText = checkboxPrefix + selectedText.split('\n').map(line => line.trim() ? `- [ ] ${line.trim()}` : '').join('\n') + checkboxSuffix;
@@ -1092,7 +963,7 @@ export default function CreatePage() {
                 <textarea
                   ref={editorRef}
                   placeholder="# 文章标题&#10;&#10;在这里开始写作...&#10;&#10;💡 提示：&#10;- 第一行会自动作为标题显示&#10;- 支持完整的 Markdown 语法&#10;- 可以直接拖拽文件上传&#10;- 使用工具栏快速插入特殊内容&#10;- 使用 # 创建标题，## 创建副标题"
-                  value={editorState.content}
+                  // value={editorState.content}
                   onChange={(e) => {
                     setEditorState(prev => ({ ...prev, content: e.target.value }));
                     setCursorPosition(e.target.selectionStart);
