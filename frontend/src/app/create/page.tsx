@@ -12,14 +12,17 @@ import {
   Underline, 
   Link, 
   Image, 
-  Video, 
   FileText, 
   Code, 
+  Code2,
+  SquareCode,
   Quote, 
   Minus, 
-  TrendingUp, 
+  TrendingUp,
+  CandlestickChart,
   DollarSign, 
-  BarChart3, 
+  BarChart3,
+
   Save, 
   Eye, 
   Settings, 
@@ -63,7 +66,7 @@ export default function CreatePage() {
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+
 
   const [editorState, setEditorState] = useState<EditorState>({
     content: '',
@@ -311,13 +314,7 @@ export default function CreatePage() {
         newText = paywallPrefix + '[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]' + paywallSuffix;
         cursorOffset = paywallPrefix.length + 17;
         break;
-      case 'poll':
-        // 投票需要前后换行
-        const pollPrefix = needsNewlineBefore() ? '\n' : '';
-        const pollSuffix = needsNewlineAfter() ? '\n' : '';
-        newText = pollPrefix + '[投票]\n选项1\n选项2\n选项3\n[/投票]' + pollSuffix;
-        cursorOffset = pollPrefix.length + 7;
-        break;
+      
       case 'chart':
         // 图表需要前后换行
         const chartPrefix = needsNewlineBefore() ? '\n' : '';
@@ -549,8 +546,6 @@ export default function CreatePage() {
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         handleFileUpload(file, 'image');
-      } else if (file.type.startsWith('video/')) {
-        handleFileUpload(file, 'video');
       } else {
         handleFileUpload(file, 'file');
       }
@@ -833,7 +828,7 @@ export default function CreatePage() {
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
                 title="代码块 (Ctrl+Shift+C)"
               >
-                <Code className="w-4 h-4" />
+                <SquareCode className="w-4 h-4" />
               </button>
               
               <div className="w-px h-4 sm:h-6 bg-gray-300"></div>
@@ -844,14 +839,6 @@ export default function CreatePage() {
                 title="插入图片"
               >
                 <Image className="w-4 h-4" />
-              </button>
-              
-              <button
-                onClick={() => videoInputRef.current?.click()}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
-                title="插入视频"
-              >
-                <Video className="w-4 h-4" />
               </button>
               
               <button
@@ -873,19 +860,11 @@ export default function CreatePage() {
               </button>
               
               <button
-                onClick={() => formatText('poll')}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
-                title="投票"
-              >
-                <BarChart3 className="w-4 h-4" />
-              </button>
-
-              <button
                 onClick={() => formatText('chart')}
                 className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
                 title="金融图表"
               >
-                <TrendingUp className="w-4 h-4" />
+                <CandlestickChart className="w-4 h-4" />
               </button>
               
               <button
@@ -956,7 +935,7 @@ export default function CreatePage() {
                     <div className="text-center">
                       <Upload className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
                       <p className="text-lg font-medium text-indigo-900">松开鼠标上传文件</p>
-                      <p className="text-sm text-indigo-600">支持图片、视频和文档</p>
+                      <p className="text-sm text-indigo-600">支持图片和文档</p>
                     </div>
                   </div>
                 )}
@@ -1048,16 +1027,7 @@ export default function CreatePage() {
         }}
       />
       
-      <input
-        ref={videoInputRef}
-        type="file"
-        accept="video/*"
-        className="hidden"
-        onChange={(e) => {
-          const files = Array.from(e.target.files || []);
-          files.forEach(file => handleFileUpload(file, 'video'));
-        }}
-      />
+
 
       {/* 历史记录模态框 */}
       {showHistory && (
