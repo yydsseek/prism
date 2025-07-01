@@ -18,10 +18,7 @@ import {
   SquareCode,
   Quote, 
   Minus, 
-  TrendingUp,
-  CandlestickChart,
   DollarSign, 
-  BarChart3,
 
   Save, 
   Eye, 
@@ -315,13 +312,7 @@ export default function CreatePage() {
         cursorOffset = paywallPrefix.length + 17;
         break;
       
-      case 'chart':
-        // 图表需要前后换行
-        const chartPrefix = '\n';
-        const chartSuffix = '\n';
-        newText = chartPrefix + '[金融图表: AAPL]' + chartSuffix;
-        cursorOffset = newText.length;
-        break;
+      
       case 'h1':
         // 标题需要在新行开始
         const h1Prefix = needsNewlineBefore() ? '\n' : '';
@@ -859,13 +850,7 @@ export default function CreatePage() {
                 <Minus className="w-4 h-4" />
               </button>
               
-              <button
-                onClick={() => formatText('chart')}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors hidden sm:inline-flex"
-                title="金融图表"
-              >
-                <CandlestickChart className="w-4 h-4" />
-              </button>
+
               
               <button
                 onClick={() => formatText('paywall')}
@@ -952,7 +937,7 @@ export default function CreatePage() {
 - 第一行会自动作为标题显示
 - 支持完整的 Markdown 语法，如# h1 ## h2
 - 可以直接拖拽文件上传
-- 工具栏可以插入付费墙、金融图表等`}
+- 工具栏可以插入付费墙等功能`}
                     value={editorState.content}
                     onChange={(e) => {
                       setEditorState(prev => ({ ...prev, content: e.target.value }));

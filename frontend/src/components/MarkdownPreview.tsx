@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
-import { DollarSign, BarChart3, TrendingUp } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import 'highlight.js/styles/github.css'; // 代码高亮样式
 
 interface MarkdownPreviewProps {
@@ -37,17 +37,12 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
       /\[付费内容开始\]([\s\S]*?)\[付费内容结束\]/g,
       '<div class="paywall-block">$1</div>'
     );
+
     
     // 处理投票
     processed = processed.replace(
       /\[投票\]([\s\S]*?)\[\/投票\]/g,
       '<div class="poll-block">$1</div>'
-    );
-    
-    // 处理金融图表
-    processed = processed.replace(
-      /\[金融图表:\s*([^\]]+)\]/g,
-      '<div class="chart-block" data-symbol="$1"></div>'
     );
     
     return processed;
@@ -274,23 +269,6 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
             </div>
             <div className="mt-4 text-sm text-blue-600">
               总计 {Math.floor(Math.random() * 500)} 人参与投票
-            </div>
-          </div>
-        );
-      }
-      
-      if (className?.includes('chart-block')) {
-        const symbol = props['data-symbol'] || 'AAPL';
-        return (
-          <div className="chart-container my-6">
-            <div className="chart-title">
-              <TrendingUp className="inline w-5 h-5 mr-2" />
-              {symbol} 股价走势
-            </div>
-            <div className="chart-placeholder">
-              <BarChart3 className="w-16 h-16 mx-auto mb-4 text-green-400" />
-              <p>图表加载中...</p>
-              <p className="text-sm mt-2">实时股价数据将在此显示</p>
             </div>
           </div>
         );
