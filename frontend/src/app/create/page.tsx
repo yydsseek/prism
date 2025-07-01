@@ -253,7 +253,7 @@ export default function CreatePage() {
     };
     
     const needsNewlineAfter = () => {
-      return afterText.length > 0 && !afterText.startsWith('\n');
+      return true;
     };
     
     let newText = '';
@@ -296,8 +296,8 @@ export default function CreatePage() {
         break;
       case 'divider':
         // 分割线需要前后换行
-        const dividerPrefix = needsNewlineBefore() ? '\n' : '';
-        const dividerSuffix = needsNewlineAfter() ? '\n' : '';
+        const dividerPrefix = '\n'
+        const dividerSuffix = '\n'
         newText = dividerPrefix + '---' + dividerSuffix;
         cursorOffset = newText.length;
         break;
@@ -309,16 +309,16 @@ export default function CreatePage() {
         break;
       case 'paywall':
         // 付费墙需要前后换行
-        const paywallPrefix = needsNewlineBefore() ? '\n' : '';
-        const paywallSuffix = needsNewlineAfter() ? '\n' : '';
+        const paywallPrefix = '\n' ;
+        const paywallSuffix = '\n' ;
         newText = paywallPrefix + '[付费内容开始]\n\n这里是付费内容...\n\n[付费内容结束]' + paywallSuffix;
         cursorOffset = paywallPrefix.length + 17;
         break;
       
       case 'chart':
         // 图表需要前后换行
-        const chartPrefix = needsNewlineBefore() ? '\n' : '';
-        const chartSuffix = needsNewlineAfter() ? '\n' : '';
+        const chartPrefix = '\n';
+        const chartSuffix = '\n';
         newText = chartPrefix + '[金融图表: AAPL]' + chartSuffix;
         cursorOffset = newText.length - 2 - chartSuffix.length;
         break;
