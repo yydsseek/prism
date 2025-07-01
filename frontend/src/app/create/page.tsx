@@ -320,7 +320,7 @@ export default function CreatePage() {
         const chartPrefix = '\n';
         const chartSuffix = '\n';
         newText = chartPrefix + '[金融图表: AAPL]' + chartSuffix;
-        cursorOffset = newText.length - 2 - chartSuffix.length;
+        cursorOffset = newText.length;
         break;
       case 'h1':
         // 标题需要在新行开始
@@ -985,7 +985,7 @@ export default function CreatePage() {
           
           {/* 预览部分 */}
           {(viewMode === 'preview' || viewMode === 'split') && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden w-full max-w-4xl w-full">
               <div className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">预览</h2>
