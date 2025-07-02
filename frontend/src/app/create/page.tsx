@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { postApi } from '../../lib/api';
 
 import MarkdownPreview from '../../components/MarkdownPreview';
 import EditorShortcuts from '../../components/EditorShortcuts';
@@ -23,7 +24,7 @@ import {
   Save, 
   Eye, 
   Settings, 
-  History, 
+  FolderOpen,
   Upload,
   Plus,
   Trash2,
@@ -49,12 +50,12 @@ interface EditorState {
   lastSaved: Date | null;
 }
 
-interface HistoryEntry {
+interface DraftEntry {
   id: string;
   timestamp: Date;
   title: string;
   content: string;
-  action: string;
+  coverImage: string;
 }
 
 export default function CreatePage() {
@@ -75,9 +76,11 @@ export default function CreatePage() {
   });
 
   const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [draftToDelete, setDraftToDelete] = useState<DraftEntry | null>(null);
+  const [drafts, setDrafts] = useState<DraftEntry[]>([]);
   const [showToolbar, setShowToolbar] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
@@ -90,71 +93,144 @@ export default function CreatePage() {
     }
   }, [user, isLoading, router]);
 
-  // 自动保存功能
-  const autoSave = useCallback(async () => {
-    if (!editorState.content) return;
+  // 保存到草稿箱功能
+  const saveToDrafts = useCallback(async () => {
+    if (!editorState.content.trim()) {
+      return Promise.resolve();
+    }
     
     setIsAutoSaving(true);
     try {
-      // 模拟保存到后端
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 保存到localStorage作为备份
-      const saveData = {
-        ...editorState,
-        lastSaved: new Date()
+      // 创建草稿条目
+      const draftEntry: DraftEntry = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        title: editorState.content.split('\n')[0]?.replace(/^#+\s*/, '') || '无标题',
+        content: editorState.content,
+        coverImage: editorState.coverImage
       };
-      localStorage.setItem('draft-post', JSON.stringify(saveData));
+      
+      // 更新草稿列表
+      setDrafts(prev => {
+        const updated = [draftEntry, ...prev.filter(d => d.title !== draftEntry.title).slice(0, 9)];
+        // 保存到localStorage
+        localStorage.setItem('draft-posts', JSON.stringify(updated));
+        return updated;
+      });
       
       setEditorState(prev => ({ ...prev, lastSaved: new Date() }));
       
-      // 添加到历史记录
-      const historyEntry: HistoryEntry = {
-        id: Date.now().toString(),
-        timestamp: new Date(),
-        title: editorState.content.split('\n')[0] || '无标题',
-        content: editorState.content.substring(0, 100),
-        action: '自动保存'
-      };
-      setHistory(prev => [historyEntry, ...prev.slice(0, 9)]);
+      // 添加一个小延迟以模拟保存过程
+      await new Promise(resolve => setTimeout(resolve, 300));
       
     } catch (error) {
-      console.error('自动保存失败:', error);
+      console.error('保存草稿失败:', error);
     } finally {
       setIsAutoSaving(false);
     }
   }, [editorState]);
 
-  // 设置自动保存定时器
-  useEffect(() => {
-    const timer = setInterval(autoSave, 30000); // 每30秒自动保存
-    return () => clearInterval(timer);
-  }, [autoSave]);
+  // 显示删除确认弹窗
+  const showDeleteConfirmation = (draft: DraftEntry) => {
+    setDraftToDelete(draft);
+    setShowDeleteConfirm(true);
+  };
 
-  // 加载草稿
+  // 确认删除草稿
+  const confirmDeleteDraft = () => {
+    if (draftToDelete) {
+      setDrafts(prev => {
+        const updated = prev.filter(d => d.id !== draftToDelete.id);
+        localStorage.setItem('draft-posts', JSON.stringify(updated));
+        return updated;
+      });
+    }
+    setShowDeleteConfirm(false);
+    setDraftToDelete(null);
+  };
+
+  // 取消删除
+  const cancelDeleteDraft = () => {
+    setShowDeleteConfirm(false);
+    setDraftToDelete(null);
+  };
+
+  // 设置自动保存定时器 - 每分钟保存一次
   useEffect(() => {
-    const savedDraft = localStorage.getItem('draft-post');
-    if (savedDraft) {
+    const timer = setInterval(saveToDrafts, 60000); // 每60秒自动保存
+    return () => clearInterval(timer);
+  }, [saveToDrafts]);
+
+  // 页面卸载时自动保存
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (editorState.content.trim()) {
+        // 同步保存草稿以确保在页面卸载前完成
+        const draftEntry: DraftEntry = {
+          id: Date.now().toString(),
+          timestamp: new Date(),
+          title: editorState.content.split('\n')[0]?.replace(/^#+\s*/, '') || '无标题',
+          content: editorState.content,
+          coverImage: editorState.coverImage
+        };
+        
+        const currentDrafts = JSON.parse(localStorage.getItem('draft-posts') || '[]');
+        const updated = [draftEntry, ...currentDrafts.filter((d: DraftEntry) => d.title !== draftEntry.title).slice(0, 9)];
+        localStorage.setItem('draft-posts', JSON.stringify(updated));
+      }
+    };
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden' && editorState.content.trim()) {
+        // 当页面变为不可见时保存草稿
+        await saveToDrafts();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [editorState.content, editorState.coverImage, saveToDrafts]);
+
+  // 加载草稿列表
+  useEffect(() => {
+    const savedDrafts = localStorage.getItem('draft-posts');
+    if (savedDrafts) {
       try {
-        const parsed = JSON.parse(savedDraft);
-        setEditorState(prev => ({
-          ...prev,
-          ...parsed,
-          lastSaved: parsed.lastSaved ? new Date(parsed.lastSaved) : null
+        const parsed = JSON.parse(savedDrafts);
+        // 确保timestamp是Date对象
+        const draftsWithDates = parsed.map((draft: any) => ({
+          ...draft,
+          timestamp: new Date(draft.timestamp)
         }));
+        setDrafts(draftsWithDates);
       } catch (error) {
-        console.error('加载草稿失败:', error);
+        console.error('加载草稿列表失败:', error);
       }
     }
+    
+    // 清除旧的草稿数据
+    localStorage.removeItem('draft-post');
   }, []);
 
   // 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl + S: 手动保存
+      // ESC: 关闭删除确认弹窗
+      if (e.key === 'Escape' && showDeleteConfirm) {
+        e.preventDefault();
+        cancelDeleteDraft();
+        return;
+      }
+      
+      // Ctrl + S: 手动保存到草稿箱
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        autoSave();
+        saveToDrafts();
         return;
       }
       
@@ -203,7 +279,7 @@ export default function CreatePage() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [autoSave]);
+  }, [saveToDrafts, showDeleteConfirm, cancelDeleteDraft]);
 
   // 自动调整textarea高度
   useEffect(() => {
@@ -546,23 +622,67 @@ export default function CreatePage() {
   // 发布文章
   const publishPost = async () => {
     try {
-      // 这里应该调用发布API
-      console.log('发布文章:', editorState);
-      // 清除草稿
-      localStorage.removeItem('draft-post');
-      router.push('/dashboard');
+      // 检查内容是否为空
+      if (!editorState.content.trim()) {
+        alert('请输入文章内容');
+        return;
+      }
+
+      // 发布前先保存草稿
+      if (editorState.content.trim()) {
+        await saveToDrafts();
+      }
+      
+      // 从内容中提取标题（第一行）
+      const lines = editorState.content.trim().split('\n');
+      const title = lines[0].replace(/^#\s*/, '') || '无标题';
+      
+      // 准备发布数据
+      const postData = {
+        title,
+        content: editorState.content,
+        excerpt: editorState.content.substring(0, 150) + '...',
+        category: 'general',
+        tags: [],
+        visibility: (editorState.isPaid ? 'subscribers' : 'public') as 'public' | 'subscribers' | 'private',
+        status: 'published' as 'draft' | 'published',
+        featuredImage: editorState.coverImage || undefined,
+      };
+      
+      // 调用API发布文章
+      const response = await postApi.createPost(postData);
+      
+      if (response.success) {
+        // 发布成功
+        alert('文章发布成功！');
+        
+        // 清除当前编辑的内容
+        setEditorState({
+          content: '',
+          coverImage: '',
+          status: 'draft',
+          isPaid: false,
+          price: 0,
+          lastSaved: null
+        });
+        
+        router.push('/dashboard');
+      } else {
+        // 发布失败
+        console.error('发布失败:', response);
+        
+        // 处理验证错误
+        if (response.errors && Array.isArray(response.errors)) {
+          const errorMessages = response.errors.map((err: any) => err.msg || err.message).join('\n');
+          alert(`发布失败:\n${errorMessages}`);
+        } else {
+          alert(`发布失败: ${response.error || response.message || '未知错误'}`);
+        }
+      }
     } catch (error) {
       console.error('发布失败:', error);
+      alert('发布失败，请检查网络连接');
     }
-  };
-
-  // 恢复历史版本
-  const restoreFromHistory = (historyEntry: HistoryEntry) => {
-    setEditorState(prev => ({
-      ...prev,
-      content: historyEntry.content
-    }));
-    setShowHistory(false);
   };
 
   if (isLoading) {
@@ -589,7 +709,13 @@ export default function CreatePage() {
             {/* 左侧：返回按钮和状态 */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={async () => {
+                  // 退出前自动保存草稿
+                  if (editorState.content.trim()) {
+                    await saveToDrafts();
+                  }
+                  router.push('/dashboard');
+                }}
                 className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
                 title="返回控制台"
               >
@@ -670,11 +796,30 @@ export default function CreatePage() {
               
               {/* 桌面端工具按钮 */}
               <button
-                onClick={() => setShowHistory(true)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors hidden sm:block"
-                title="查看历史"
+                onClick={() => saveToDrafts()}
+                className={`p-2 rounded-md transition-colors hidden sm:block ${
+                  isAutoSaving || !editorState.content.trim() 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                }`}
+                title="立即保存草稿 (Ctrl+S)"
+                disabled={isAutoSaving || !editorState.content.trim()}
               >
-                <History className="w-5 h-5" />
+                <Save className={`w-5 h-5 ${isAutoSaving ? 'animate-spin' : ''}`} />
+              </button>
+
+              <button
+                onClick={async () => {
+                  // 打开草稿箱前先保存当前内容
+                  if (editorState.content.trim()) {
+                    await saveToDrafts();
+                  }
+                  setShowDrafts(true);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors hidden sm:block"
+                title="保存并查看草稿"
+              >
+                <FolderOpen className="w-5 h-5" />
               </button>
               
               <button
@@ -1014,15 +1159,15 @@ export default function CreatePage() {
       
 
 
-      {/* 历史记录模态框 */}
-      {showHistory && (
+      {/* 草稿箱模态框 */}
+      {showDrafts && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">修改历史</h3>
+                <h3 className="text-lg font-semibold text-gray-900">草稿箱</h3>
                 <button
-                  onClick={() => setShowHistory(false)}
+                  onClick={() => setShowDrafts(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   ×
@@ -1030,24 +1175,50 @@ export default function CreatePage() {
               </div>
             </div>
             <div className="p-6 overflow-y-auto max-h-80">
-              {history.length === 0 ? (
-                <p className="text-gray-500 text-center">暂无历史记录</p>
+              {drafts.length === 0 ? (
+                <p className="text-gray-500 text-center">暂无草稿</p>
               ) : (
                 <div className="space-y-3">
-                  {history.map((entry) => (
+                  {drafts.map((entry) => (
                     <div
                       key={entry.id}
-                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                      onClick={() => restoreFromHistory(entry)}
+                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 group"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">{entry.title}</span>
-                        <span className="text-sm text-gray-500">
-                          {entry.timestamp.toLocaleString()}
-                        </span>
+                      <div
+                        className="cursor-pointer"
+                        onClick={async () => {
+                          // 切换前自动保存当前内容
+                          if (editorState.content.trim()) {
+                            await saveToDrafts();
+                          }
+                          setEditorState(prev => ({
+                            ...prev,
+                            content: entry.content,
+                            coverImage: entry.coverImage
+                          }));
+                          setShowDrafts(false);
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-gray-900">{entry.title}</span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-500">
+                              {entry.timestamp.toLocaleString()}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                showDeleteConfirmation(entry);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all"
+                              title="删除草稿"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">{entry.content}</p>
                       </div>
-                      <p className="text-sm text-gray-600 truncate">{entry.content}</p>
-                      <span className="text-xs text-indigo-600">{entry.action}</span>
                     </div>
                   ))}
                 </div>
@@ -1109,6 +1280,60 @@ export default function CreatePage() {
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                 >
                   保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 删除确认弹窗 */}
+      {showDeleteConfirm && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn"
+          onClick={cancelDeleteDraft}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-md w-full mx-4 transform transition-all duration-300 ease-out scale-100 animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">删除草稿</h3>
+                  <p className="text-sm text-gray-500">此操作无法撤销</p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 mb-2">
+                  确定要删除草稿 "<span className="font-medium">{draftToDelete?.title}</span>" 吗？
+                </p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 truncate">
+                    {draftToDelete?.content}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    创建时间: {draftToDelete?.timestamp.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDeleteDraft}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmDeleteDraft}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  确认删除
                 </button>
               </div>
             </div>

@@ -57,7 +57,7 @@ app.use(limiter);
 // 特殊路由的速率限制
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // 认证相关接口更严格
+  max: 50, // 认证相关接口更严格
   message: {
     success: false,
     message: '认证请求过于频繁，请稍后再试'

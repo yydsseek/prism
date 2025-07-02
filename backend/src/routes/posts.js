@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { optionalAuth, requirePostOwner } = require('../middleware/auth');
+const { optionalAuth, requireAuth, requirePostOwner } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -99,13 +99,13 @@ router.get('/:slug', optionalAuth, asyncHandler(async (req, res) => {
 }));
 
 // 创建文章
-router.post('/', [
+router.post('/', requireAuth, [
   body('title')
     .isLength({ min: 1, max: 200 })
     .withMessage('标题长度必须在1-200个字符之间'),
   body('content')
-    .isLength({ min: 10 })
-    .withMessage('文章内容至少10个字符'),
+    .isLength({ min: 5 })
+    .withMessage('文章内容至少5个字符'),
   body('excerpt')
     .optional()
     .isLength({ max: 500 })
@@ -147,13 +147,22 @@ router.post('/', [
     seo
   } = req.body;
 
-  // 生成slug
-  const slug = title
+  // 生成slug - 支持中文
+  let slug = title
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
     .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim('-');
+    .replace(/-+/g, '-');
+  
+  // 如果slug为空或只包含特殊字符，使用时间戳作为后备
+  if (!slug || slug.replace(/[-]/g, '').length === 0) {
+    slug = `post-${Date.now()}`;
+  }
+  
+  // 确保slug不超过50个字符
+  if (slug.length > 50) {
+    slug = slug.substring(0, 50).replace(/-+$/, '');
+  }
 
   // 检查slug是否已存在
   const existingPost = await Post.findOne({ slug });
@@ -195,8 +204,8 @@ router.put('/:postId', requirePostOwner, [
     .withMessage('标题长度必须在1-200个字符之间'),
   body('content')
     .optional()
-    .isLength({ min: 10 })
-    .withMessage('文章内容至少10个字符'),
+    .isLength({ min: 5 })
+    .withMessage('文章内容至少5个字符'),
   body('excerpt')
     .optional()
     .isLength({ max: 500 })
@@ -252,12 +261,21 @@ router.put('/:postId', requirePostOwner, [
 
   // 如果标题改变，需要更新slug
   if (title && title !== req.post.title) {
-    const newSlug = title
+    let newSlug = title
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim('-');
+      .replace(/-+/g, '-');
+    
+    // 如果slug为空或只包含特殊字符，使用时间戳作为后备
+    if (!newSlug || newSlug.replace(/[-]/g, '').length === 0) {
+      newSlug = `post-${Date.now()}`;
+    }
+    
+    // 确保slug不超过50个字符
+    if (newSlug.length > 50) {
+      newSlug = newSlug.substring(0, 50).replace(/-+$/, '');
+    }
 
     const existingPost = await Post.findOne({ slug: newSlug, _id: { $ne: req.post._id } });
     if (existingPost) {

@@ -17,7 +17,7 @@ const postSchema = new mongoose.Schema({
   content: {
     type: String,
     required: [true, '文章内容是必需的'],
-    minlength: [10, '文章内容至少10个字符']
+    minlength: [5, '文章内容至少5个字符']
   },
   excerpt: {
     type: String,

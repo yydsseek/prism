@@ -14,6 +14,42 @@ interface MarkdownPreviewProps {
 }
 
 export default function MarkdownPreview({ content, coverImage }: MarkdownPreviewProps) {
+  // 递归提取children中的所有文本内容
+  const extractTextFromChildren = (children: any): string => {
+    if (typeof children === 'string') {
+      return children;
+    }
+    
+    if (typeof children === 'number') {
+      return children.toString();
+    }
+    
+    if (Array.isArray(children)) {
+      return children.map(child => extractTextFromChildren(child)).join('');
+    }
+    
+    if (children && typeof children === 'object') {
+      // 如果是React元素，尝试提取其children
+      if (children.props && children.props.children) {
+        return extractTextFromChildren(children.props.children);
+      }
+      
+      // 如果有children属性
+      if (children.children) {
+        return extractTextFromChildren(children.children);
+      }
+      
+      // 尝试转换为字符串
+      if (children.toString && typeof children.toString === 'function') {
+        const str = children.toString();
+        // 避免返回 "[object Object]"
+        return str === '[object Object]' ? '' : str;
+      }
+    }
+    
+    return '';
+  };
+
   // 处理特殊功能块的预处理
   const preprocessContent = (text: string) => {
     if (!text) return '';
@@ -32,13 +68,13 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
       }
     }
     
+
     // 处理付费墙
     processed = processed.replace(
       /\[付费内容开始\]([\s\S]*?)\[付费内容结束\]/g,
       '<div class="paywall-block">$1</div>'
     );
 
-    
     // 处理投票
     processed = processed.replace(
       /\[投票\]([\s\S]*?)\[\/投票\]/g,
@@ -230,6 +266,9 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
     // 自定义div处理特殊功能块
     div: ({ children, className, ...props }: any) => {
       if (className?.includes('paywall-block')) {
+        // 使用递归函数提取所有文本内容
+        const paywallContent = extractTextFromChildren(children);
+        
         return (
           <div className="paywall my-6">
             <div className="paywall-header">
@@ -242,7 +281,7 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
                 rehypePlugins={[rehypeHighlight]}
                 components={components}
               >
-                {children}
+                {paywallContent}
               </ReactMarkdown>
             </div>
             <button className="paywall-button">
@@ -253,7 +292,9 @@ export default function MarkdownPreview({ content, coverImage }: MarkdownPreview
       }
       
       if (className?.includes('poll-block')) {
-        const pollOptions = children?.toString().split('\n').filter((line: string) => line.trim()) || [];
+        // 使用递归函数提取所有文本内容
+        const pollText = extractTextFromChildren(children);
+        const pollOptions = pollText.split('\n').filter((line: string) => line.trim()) || [];
         return (
           <div className="poll-container my-6">
             <h3 className="poll-title">投票</h3>

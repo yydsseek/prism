@@ -164,6 +164,7 @@ const requirePostOwner = async (req, res, next) => {
 
 module.exports = {
   authMiddleware,
+  requireAuth: authMiddleware, // 添加别名
   optionalAuth,
   requireCreator,
   requireActiveCreator,
