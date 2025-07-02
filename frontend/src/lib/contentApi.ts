@@ -4,17 +4,32 @@ async function request<T>(
   url: string,
   data?: any
 ): Promise<T> {
-  const response = await fetch(`/api${url}`, {
+  let finalUrl = `/api${url}`;
+  let options: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...(localStorage.getItem('token') && {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       })
-    },
-    ...(data && { body: JSON.stringify(data) })
-  });
-  
+    }
+  };
+
+  // 对于GET请求，将数据作为查询参数
+  if (method === 'GET' && data) {
+    const params = new URLSearchParams();
+    Object.keys(data).forEach(key => {
+      if (data[key] !== undefined && data[key] !== null) {
+        params.append(key, data[key].toString());
+      }
+    });
+    finalUrl += `?${params.toString()}`;
+  } else if (data && method !== 'GET') {
+    // 对于非GET请求，将数据作为body
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(finalUrl, options);
   return response.json();
 }
 import type { 
