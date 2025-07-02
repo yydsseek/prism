@@ -4,7 +4,8 @@ async function request<T>(
   url: string,
   data?: any
 ): Promise<T> {
-  let finalUrl = `/api${url}`;
+  let baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  let finalUrl = `${baseURL}${url}`;
   let options: RequestInit = {
     method,
     headers: {
