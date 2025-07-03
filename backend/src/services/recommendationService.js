@@ -30,7 +30,6 @@ class RecommendationService {
     
     // 构建推荐查询
     const recommendationQuery = await this.buildRecommendationQuery(userId, userPreferences);
-    
     // 执行查询
     const posts = await Post.find(recommendationQuery)
       .populate('author', 'username displayName avatar bio isCreator')
@@ -41,8 +40,8 @@ class RecommendationService {
 
     // 计算个性化分数
     const scoredPosts = await this.calculatePersonalizedScores(posts, userPreferences);
-    
-    return scoredPosts.sort((a, b) => b.personalizedScore - a.personalizedScore);
+    console.log(scoredPosts);
+    return await scoredPosts.sort((a, b) => b.personalizedScore - a.personalizedScore);
   }
 
   /**
@@ -232,7 +231,7 @@ class RecommendationService {
     };
 
     // 排除用户自己的文章
-    baseQuery.author = { $ne: userId };
+    // baseQuery.author = { $ne: userId };
 
     // 根据用户偏好调整查询
     const orConditions = [];
