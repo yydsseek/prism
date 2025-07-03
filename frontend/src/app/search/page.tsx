@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { contentApi } from '../../lib/contentApi';
 import type { Post, Tag, SearchFilters } from '../../types/content';
 import TopNavBar from '../../components/TopNavBar';
+import { Search, Filter, User, Clock, Tag as LucideTag, BookmarkIcon } from 'lucide-react';
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -309,14 +310,27 @@ function PostSearchResult({ post, query }: { post: Post; query: string }) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start space-x-4">
         {/* 作者头像 */}
-        <img
-          src={post.author.avatar || '/default-avatar.png'}
-          alt={post.author.displayName}
-          className="w-10 h-10 rounded-full"
-          onError={(e) => {
-            e.currentTarget.src = '/default-avatar.png';
-          }}
-        />
+        <div className="flex-shrink-0">
+          {post.author.avatar ? (
+            <img
+              src={post.author.avatar}
+              alt={post.author.username}
+              className="h-8 w-8 rounded-full"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                if (fallback) {
+                  fallback.style.display = 'flex';
+                }
+              }}
+            />
+          ) : null}
+          <div 
+            className={`avatar-fallback h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center ${post.author.avatar ? 'hidden' : 'flex'}`}
+          >
+            <User className="h-4 w-4 text-gray-500" />
+          </div>
+        </div>
         
         <div className="flex-1">
           {/* 作者信息 */}

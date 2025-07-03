@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { bookmarkApi } from '../../lib/contentApi';
 import type { Bookmark, BookmarkCollection, ContentFilters } from '../../types/content';
 import TopNavBar from '../../components/TopNavBar';
+import { User, Bookmark as BookmarkIcon, Clock, Tag, Search, X } from 'lucide-react';
 
 export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -171,15 +172,28 @@ function BookmarkCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           {/* 文章信息 */}
-          <div className="flex items-center mb-3">
-            <img
-              src={bookmark.post.author.avatar || '/default-avatar.png'}
-              alt={bookmark.post.author.displayName}
-              className="w-8 h-8 rounded-full mr-3"
-              onError={(e) => {
-                e.currentTarget.src = '/default-avatar.png';
-              }}
-            />
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="flex-shrink-0">
+              {bookmark.post.author.avatar ? (
+                <img
+                  src={bookmark.post.author.avatar}
+                  alt={bookmark.post.author.username}
+                  className="h-8 w-8 rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                    if (fallback) {
+                      fallback.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <div 
+                className={`avatar-fallback h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center ${bookmark.post.author.avatar ? 'hidden' : 'flex'}`}
+              >
+                <User className="h-4 w-4 text-gray-500" />
+              </div>
+            </div>
             <div>
               <p className="text-sm font-medium text-gray-900">
                 {bookmark.post.author.displayName}

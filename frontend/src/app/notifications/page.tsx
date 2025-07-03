@@ -240,23 +240,28 @@ function NotificationCard({
         !notification.read ? 'border-l-4 border-l-indigo-500' : ''
       }`}
     >
-      <div className="flex items-start space-x-4">
-        {/* 头像或图标 */}
+      <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
           {notification.avatar ? (
             <img
               src={notification.avatar}
-              alt="用户头像"
-              className="w-10 h-10 rounded-full"
+              alt="Avatar"
+              className="h-10 w-10 rounded-full"
               onError={(e) => {
-                e.currentTarget.src = '/default-avatar.png';
+                // Hide the image and show the icon fallback
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                if (fallback) {
+                  fallback.style.display = 'flex';
+                }
               }}
             />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-              {getNotificationIcon(notification.type)}
-            </div>
-          )}
+          ) : null}
+          <div 
+            className={`avatar-fallback h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center ${notification.avatar ? 'hidden' : 'flex'}`}
+          >
+            <User className="h-5 w-5 text-gray-500" />
+          </div>
         </div>
 
         {/* 通知内容 */}

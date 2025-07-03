@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { contentApi, tagApi } from '../../lib/contentApi';
 import type { Post, Tag, ContentFilters } from '../../types/content';
 import TopNavBar from '../../components/TopNavBar';
+import { Filter, Heart, MessageCircle, Share2, Bookmark, User, Clock, TrendingUp, Star, Eye } from 'lucide-react';
 
 interface ContentPageProps {}
 
@@ -233,12 +234,28 @@ function PostCard({ post }: { post: Post }) {
       
       <div className="p-6">
         {/* 作者信息 */}
-        <div className="flex items-center mb-4">
-          <img
-            src={post.author.avatar || '/default-avatar.png'}
-            alt={post.author.displayName}
-            className="w-10 h-10 rounded-full mr-3"
-          />
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="flex-shrink-0">
+            {post.author.avatar ? (
+              <img
+                src={post.author.avatar}
+                alt={post.author.displayName}
+                className="h-10 w-10 rounded-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+              />
+            ) : null}
+            <div 
+              className={`avatar-fallback h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center ${post.author.avatar ? 'hidden' : 'flex'}`}
+            >
+              <User className="h-5 w-5 text-gray-500" />
+            </div>
+          </div>
           <div>
             <p className="text-sm font-medium text-gray-900">{post.author.displayName}</p>
             <p className="text-sm text-gray-500">
@@ -425,14 +442,11 @@ function Sidebar({ activeTab }: { activeTab: string }) {
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center">
-              <img
-                src={`/creator-${i}.jpg`}
-                alt="创作者"
-                className="w-10 h-10 rounded-full mr-3"
-                onError={(e) => {
-                  e.currentTarget.src = '/default-avatar.png';
-                }}
-              />
+              <div className="flex-shrink-0 mr-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="h-5 w-5 text-gray-500" />
+                </div>
+              </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">创作者 {i}</p>
                 <p className="text-xs text-gray-500">1.2K 关注者</p>

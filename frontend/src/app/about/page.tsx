@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react'
-import { Users, BookOpen, DollarSign, Star, Heart, Globe, Shield, Zap } from 'lucide-react'
+import { Users, BookOpen, DollarSign, Star, Heart, Globe, Shield, Zap, User } from 'lucide-react'
 import TopNavBar from '../../components/TopNavBar'
 
 export default function AboutPage() {
@@ -167,14 +167,9 @@ export default function AboutPage() {
               }
             ].map((member, index) => (
               <div key={index} className="text-center">
-                <img
-                  className="mx-auto h-24 w-24 rounded-full"
-                  src={member.avatar}
-                  alt={member.name}
-                  onError={(e) => {
-                    e.currentTarget.src = '/default-avatar.png';
-                  }}
-                />
+                <div className="mx-auto h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="h-12 w-12 text-gray-500" />
+                </div>
                 <h3 className="mt-4 text-lg font-medium text-gray-900">{member.name}</h3>
                 <p className="text-indigo-600 font-medium">{member.role}</p>
                 <p className="mt-2 text-sm text-gray-500">{member.bio}</p>
