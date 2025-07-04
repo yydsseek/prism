@@ -40,7 +40,6 @@ class RecommendationService {
 
     // 计算个性化分数
     const scoredPosts = await this.calculatePersonalizedScores(posts, userPreferences);
-    console.log(scoredPosts);
     return await scoredPosts.sort((a, b) => b.personalizedScore - a.personalizedScore);
   }
 

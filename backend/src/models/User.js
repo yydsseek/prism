@@ -262,7 +262,7 @@ userSchema.methods.checkProfileCompletion = function() {
     if (!this.investmentInfo?.investmentStage?.length) missingFields.push('investmentInfo.investmentStage');
   }
   
-  const profileCompleted = missingFields.length === 0 && this.nickname;
+  const profileCompleted = missingFields.length === 0 && !!this.nickname;
   
   return {
     profileCompleted,

@@ -2,13 +2,13 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { requireCreator } = require('../middleware/auth');
+const { authMiddleware, requireCreator } = require('../middleware/auth');
 const uploadService = require('../services/uploadService');
 
 const router = express.Router();
 
 // 获取用户资料
-router.get('/profile', asyncHandler(async (req, res) => {
+router.get('/profile', authMiddleware, asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
     .populate('subscriberCount')
     .populate('postCount');
@@ -20,7 +20,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
 }));
 
 // 更新用户资料
-router.put('/profile', [
+router.put('/profile', authMiddleware, [
   body('displayName')
     .optional()
     .isLength({ min: 1, max: 50 })
@@ -98,7 +98,7 @@ router.put('/profile', [
 }));
 
 // 用户信息设置（注册后的完善流程）
-router.post('/setup-profile', [
+router.post('/setup-profile', authMiddleware, [
   body('nickname')
     .notEmpty()
     .withMessage('昵称是必需的')
@@ -109,51 +109,51 @@ router.post('/setup-profile', [
     .isLength({ max: 200 })
     .withMessage('个人简介最多200个字符'),
   // 工作信息验证
-  body('workPosition')
-    .optional()
-    .isLength({ max: 50 })
-    .withMessage('职位最多50个字符'),
-  body('workCompany')
-    .optional()
-    .isLength({ max: 50 })
-    .withMessage('公司名称最多50个字符'),
-  body('workIndustry')
-    .optional()
-    .isIn([
-      'technology', 'finance', 'healthcare', 'education', 'retail',
-      'manufacturing', 'real_estate', 'energy', 'media', 'entertainment',
-      'automotive', 'agriculture', 'consulting', 'government', 'nonprofit', 'other'
-    ])
-    .withMessage('请选择有效的行业'),
-  body('workExperience')
-    .optional()
-    .isLength({ max: 1000 })
-    .withMessage('工作经历描述最多1000个字符'),
-  body('workYears')
-    .optional()
-    .isInt({ min: 0, max: 50 })
-    .withMessage('工作年限必须在0-50年之间'),
-  // 投资信息验证
-  body('investmentExperience')
-    .optional()
-    .isLength({ max: 1000 })
-    .withMessage('投资经历描述最多1000个字符'),
-  body('investmentIndustries')
-    .optional()
-    .isArray()
-    .withMessage('投资行业必须是数组'),
-  body('investmentStage')
-    .optional()
-    .isArray()
-    .withMessage('投资阶段必须是数组'),
-  body('investmentSize')
-    .optional()
-    .isIn(['under_10w', '10w_50w', '50w_100w', '100w_500w', '500w_1000w', 'over_1000w'])
-    .withMessage('请选择有效的投资规模'),
-  body('investmentYears')
-    .optional()
-    .isInt({ min: 0, max: 50 })
-    .withMessage('投资年限必须在0-50年之间')
+  // body('workPosition')
+  //   .optional()
+  //   .isLength({ max: 50 })
+  //   .withMessage('职位最多50个字符'),
+  // body('workCompany')
+  //   .optional()
+  //   .isLength({ max: 50 })
+  //   .withMessage('公司名称最多50个字符'),
+  // body('workIndustry')
+  //   .optional()
+  //   .isIn([
+  //     'technology', 'finance', 'healthcare', 'education', 'retail',
+  //     'manufacturing', 'real_estate', 'energy', 'media', 'entertainment',
+  //     'automotive', 'agriculture', 'consulting', 'government', 'nonprofit', 'other'
+  //   ])
+  //   .withMessage('请选择有效的行业'),
+  // body('workExperience')
+  //   .optional()
+  //   .isLength({ max: 1000 })
+  //   .withMessage('工作经历描述最多1000个字符'),
+  // body('workYears')
+  //   .optional()
+  //   .isInt({ min: 0, max: 50 })
+  //   .withMessage('工作年限必须在0-50年之间'),
+  // // 投资信息验证
+  // body('investmentExperience')
+  //   .optional()
+  //   .isLength({ max: 1000 })
+  //   .withMessage('投资经历描述最多1000个字符'),
+  // body('investmentIndustries')
+  //   .optional()
+  //   .isArray()
+  //   .withMessage('投资行业必须是数组'),
+  // body('investmentStage')
+  //   .optional()
+  //   .isArray()
+  //   .withMessage('投资阶段必须是数组'),
+  // body('investmentSize')
+  //   .optional()
+  //   .isIn(['under_10w', '10w_50w', '50w_100w', '100w_500w', '500w_1000w', 'over_1000w'])
+  //   .withMessage('请选择有效的投资规模'),
+  // body('investmentYears')
+  //   .optional()
+  //   .isInt({ min: 0, max: 50 })
+  //   .withMessage('投资年限必须在0-50年之间')
 ], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -230,7 +230,7 @@ router.post('/setup-profile', [
 }));
 
 // 检查用户资料完善状态
-router.get('/profile-status', asyncHandler(async (req, res) => {
+router.get('/profile-status', authMiddleware, asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   const profileStatus = user.checkProfileCompletion();
 
@@ -241,7 +241,7 @@ router.get('/profile-status', asyncHandler(async (req, res) => {
 }));
 
 // 上传头像
-router.post('/upload-avatar', asyncHandler(async (req, res) => {
+router.post('/upload-avatar', authMiddleware, asyncHandler(async (req, res) => {
   const upload = uploadService.getMulterConfig('avatar').single('avatar');
   
   upload(req, res, async (err) => {
@@ -305,7 +305,7 @@ router.post('/upload-avatar', asyncHandler(async (req, res) => {
 }));
 
 // 上传封面图
-router.post('/upload-cover', asyncHandler(async (req, res) => {
+router.post('/upload-cover', authMiddleware, asyncHandler(async (req, res) => {
   const upload = uploadService.getMulterConfig('cover').single('cover');
   
   upload(req, res, async (err) => {
@@ -359,7 +359,7 @@ router.post('/upload-cover', asyncHandler(async (req, res) => {
 }));
 
 // 修改密码
-router.put('/change-password', [
+router.put('/change-password', authMiddleware, [
   body('currentPassword')
     .notEmpty()
     .withMessage('请输入当前密码'),
@@ -411,9 +411,9 @@ router.put('/change-password', [
 }));
 
 // 修改手机号
-router.put('/change-phone', [
+router.put('/change-phone', authMiddleware, [
   body('newPhone')
-    .isMobilePhone('zh-CN')
+    .matches(/^1[3-9]\d{9}$/)
     .withMessage('请输入有效的手机号'),
   body('verificationCode')
     .isLength({ min: 6, max: 6 })
@@ -480,7 +480,7 @@ router.put('/change-phone', [
 }));
 
 // 成为创作者
-router.post('/become-creator', [
+router.post('/become-creator', authMiddleware, [
   body('title')
     .isLength({ min: 1, max: 100 })
     .withMessage('创作者标题长度必须在1-100个字符之间'),
@@ -528,7 +528,7 @@ router.post('/become-creator', [
 }));
 
 // 更新创作者资料
-router.put('/creator-profile', [
+router.put('/creator-profile', authMiddleware, [
   body('title')
     .optional()
     .isLength({ min: 1, max: 100 })
@@ -572,7 +572,7 @@ router.put('/creator-profile', [
 }));
 
 // 获取创作者统计信息
-router.get('/creator-stats', requireCreator, asyncHandler(async (req, res) => {
+router.get('/creator-stats', authMiddleware, requireCreator, asyncHandler(async (req, res) => {
   const Subscription = require('../models/Subscription');
   const Post = require('../models/Post');
 
@@ -601,7 +601,7 @@ router.get('/creator-stats', requireCreator, asyncHandler(async (req, res) => {
 }));
 
 // 获取订阅者列表
-router.get('/subscribers', requireCreator, asyncHandler(async (req, res) => {
+router.get('/subscribers', authMiddleware, requireCreator, asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, status = 'active' } = req.query;
   const skip = (page - 1) * limit;
 
@@ -636,7 +636,7 @@ router.get('/subscribers', requireCreator, asyncHandler(async (req, res) => {
 }));
 
 // 删除账户
-router.delete('/account', [
+router.delete('/account', authMiddleware, [
   body('password')
     .notEmpty()
     .withMessage('请输入密码确认删除')
